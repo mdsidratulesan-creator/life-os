@@ -1,0 +1,2774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>HSC Study Dashboard</title>
+<style>
+/* ============================================================
+   HSC STUDY DASHBOARD — Design tokens
+   Palette: base #12141f, panel #1b1f2e, primary(amber) #e8b339,
+            secondary(teal) #3ddc97, danger(coral) #ef5f6c,
+            info(indigo) #7c8cff, text #eef0f7, muted #8a90a8
+   Type: display = Poppins, body/UI = Inter, data = ui-monospace
+   ============================================================ */
+:root{
+  --bg:#12141f;
+  --bg-grad: radial-gradient(circle at 20% -10%, #23283f 0%, #12141f 45%);
+  --panel: rgba(31,35,52,0.62);
+  --panel-solid:#1b1f2e;
+  --panel-border: rgba(255,255,255,0.08);
+  --panel-hi: rgba(255,255,255,0.05);
+  --text:#eef0f7;
+  --muted:#8a90a8;
+  --muted2:#5d6280;
+  --primary:#e8b339;
+  --primary-ink:#241a02;
+  --secondary:#3ddc97;
+  --danger:#ef5f6c;
+  --warn:#f2c14e;
+  --info:#7c8cff;
+  --radius-lg:26px;
+  --radius-md:18px;
+  --radius-sm:12px;
+  --shadow-lift: 0 10px 30px rgba(0,0,0,0.35);
+  --font-display: "Poppins", "Segoe UI", system-ui, sans-serif;
+  --font-body: "Inter", "Segoe UI", system-ui, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", Menlo, monospace;
+}
+:root.light{
+  --bg:#f3f1ea;
+  --bg-grad: radial-gradient(circle at 20% -10%, #ffffff 0%, #f3f1ea 45%);
+  --panel: rgba(255,255,255,0.72);
+  --panel-solid:#ffffff;
+  --panel-border: rgba(20,20,30,0.08);
+  --panel-hi: rgba(0,0,0,0.03);
+  --text:#1a1c26;
+  --muted:#5c6079;
+  --muted2:#9498ab;
+  --primary-ink:#2a1e00;
+}
+*{ box-sizing:border-box; }
+html,body{ height:100%; }
+body{
+  margin:0;
+  background:var(--bg-grad), var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:88px;
+  min-height:100vh;
+  transition:background .3s ease,color .3s ease;
+}
+@font-face{ font-family:"Poppins"; src:local("Poppins"); }
+h1,h2,h3,h4,.display{ font-family:var(--font-display); letter-spacing:-0.01em; }
+.mono{ font-family:var(--font-mono); }
+button{ font-family:inherit; }
+a{ color:inherit; }
+::-webkit-scrollbar{ width:8px; height:8px; }
+::-webkit-scrollbar-thumb{ background:var(--panel-border); border-radius:8px; }
+
+/* reduced motion */
+@media (prefers-reduced-motion: reduce){
+  *{ animation-duration:0.001ms !important; transition-duration:0.001ms !important; }
+}
+
+.app{ max-width:560px; margin:0 auto; padding:18px 16px 8px; position:relative; }
+@media (min-width:900px){
+  .app{ max-width:1080px; padding:28px 32px 8px; }
+}
+
+/* ---------- Top bar ---------- */
+.topbar{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
+.brand{ display:flex; align-items:center; gap:10px; }
+.brand-mark{
+  width:38px;height:38px;border-radius:12px;
+  background:linear-gradient(135deg,var(--primary),#ffd77a);
+  display:flex;align-items:center;justify-content:center;
+  font-weight:700;color:var(--primary-ink); font-family:var(--font-display);
+  box-shadow:0 4px 14px rgba(232,179,57,0.35);
+}
+.brand-text .t1{ font-size:15px; font-weight:600; }
+.brand-text .t2{ font-size:11px; color:var(--muted); }
+.topbar-actions{ display:flex; gap:8px; }
+.icon-btn{
+  width:38px;height:38px;border-radius:50%;border:1px solid var(--panel-border);
+  background:var(--panel); color:var(--text); cursor:pointer; display:flex;align-items:center;justify-content:center;
+  font-size:16px; transition:transform .15s ease, background .2s ease;
+  backdrop-filter: blur(10px);
+}
+.icon-btn:hover{ transform:translateY(-2px); }
+.icon-btn:active{ transform:scale(0.94); }
+
+/* ---------- Glass card ---------- */
+.card{
+  background:var(--panel);
+  border:1px solid var(--panel-border);
+  border-radius:var(--radius-lg);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow:var(--shadow-lift);
+  padding:18px;
+  margin-bottom:14px;
+  position:relative;
+  overflow:hidden;
+}
+.card-title{ display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.card-title h3{ font-size:14px; margin:0; color:var(--muted); text-transform:uppercase; letter-spacing:.08em; font-weight:600; }
+.card-title .action{ font-size:12px; color:var(--primary); cursor:pointer; background:none;border:none;font-weight:600; }
+
+/* ---------- Ticket / admit-card hero ---------- */
+.ticket{
+  background:linear-gradient(135deg, rgba(232,179,57,0.16), rgba(61,220,151,0.08));
+  border:1px solid rgba(232,179,57,0.35);
+  border-radius:var(--radius-lg);
+  padding:20px;
+  margin-bottom:14px;
+  position:relative;
+  display:flex; align-items:center; gap:16px;
+  overflow:hidden;
+}
+.ticket::before, .ticket::after{
+  content:""; position:absolute; width:24px; height:24px; background:var(--bg); border-radius:50%;
+  top:50%; transform:translateY(-50%);
+}
+.ticket::before{ left:-12px; }
+.ticket::after{ right:-12px; }
+.ticket-perf{
+  position:absolute; right:78px; top:8px; bottom:8px; width:0;
+  border-right:2px dashed rgba(232,179,57,0.4);
+}
+.ticket-main{ flex:1; min-width:0; }
+.ticket-eyebrow{ font-size:11px; text-transform:uppercase; letter-spacing:.12em; color:var(--primary); font-weight:700; }
+.ticket-title{ font-size:15px; font-weight:600; margin:4px 0 10px; }
+.ticket-date-row{ display:flex; align-items:center; gap:8px; }
+.ticket-date{ background:transparent; border:none; color:var(--text); font-family:var(--font-mono); font-size:12px; border-bottom:1px dotted var(--muted2); }
+.ticket-count{ text-align:center; padding-left:10px; flex-shrink:0; width:78px; }
+.ticket-count .num{ font-family:var(--font-display); font-size:34px; font-weight:700; color:var(--primary); line-height:1; }
+.ticket-count .lbl{ font-size:10px; color:var(--muted); text-transform:uppercase; letter-spacing:.06em; }
+
+/* ---------- Stat grid ---------- */
+.grid{ display:grid; gap:12px; }
+.grid-2{ grid-template-columns:1fr 1fr; }
+.grid-3{ grid-template-columns:repeat(3,1fr); }
+.grid-4{ grid-template-columns:repeat(2,1fr); }
+@media (min-width:640px){ .grid-4{ grid-template-columns:repeat(4,1fr); } }
+
+.stat-card{
+  background:var(--panel); border:1px solid var(--panel-border); border-radius:var(--radius-md);
+  padding:14px; backdrop-filter:blur(14px);
+}
+.stat-card .label{ font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+.stat-card .value{ font-family:var(--font-display); font-size:22px; font-weight:700; margin-top:4px; }
+.stat-card .sub{ font-size:11px; color:var(--muted2); margin-top:2px; }
+
+/* ---------- Progress ring ---------- */
+.ring-wrap{ position:relative; display:inline-flex; align-items:center; justify-content:center; }
+.ring-wrap svg{ transform:rotate(-90deg); }
+.ring-track{ stroke:var(--panel-hi); fill:none; }
+.ring-bar{ stroke:var(--primary); fill:none; stroke-linecap:round; transition:stroke-dashoffset .6s cubic-bezier(.4,0,.2,1); }
+.ring-label{ position:absolute; font-family:var(--font-display); font-weight:700; }
+
+/* ---------- Progress bar (linear) ---------- */
+.pbar{ height:8px; border-radius:8px; background:var(--panel-hi); overflow:hidden; }
+.pbar-fill{ height:100%; border-radius:8px; background:linear-gradient(90deg,var(--primary),var(--secondary)); transition:width .5s ease; }
+
+/* ---------- Buttons ---------- */
+.btn{
+  border:none; border-radius:14px; padding:10px 16px; font-weight:600; font-size:13px; cursor:pointer;
+  display:inline-flex; align-items:center; gap:6px; transition:transform .15s ease, filter .15s ease;
+}
+.btn:active{ transform:scale(0.96); }
+.btn-primary{ background:linear-gradient(135deg,var(--primary),#ffd77a); color:var(--primary-ink); }
+.btn-ghost{ background:var(--panel); border:1px solid var(--panel-border); color:var(--text); }
+.btn-danger{ background:rgba(239,95,108,0.15); color:var(--danger); border:1px solid rgba(239,95,108,0.3); }
+.btn-sm{ padding:6px 12px; font-size:12px; border-radius:10px; }
+.btn-block{ width:100%; justify-content:center; }
+.btn:hover{ filter:brightness(1.08); }
+
+/* ---------- Checkbox rows ---------- */
+.check-row{
+  display:flex; align-items:center; gap:12px; padding:10px 4px; border-bottom:1px solid var(--panel-hi);
+}
+.check-row:last-child{ border-bottom:none; }
+.chk{
+  width:22px;height:22px;border-radius:7px;border:2px solid var(--muted2);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer;
+  transition:all .18s ease; background:transparent;
+}
+.chk.on{ background:var(--secondary); border-color:var(--secondary); }
+.chk.on::after{ content:"✓"; color:#08201a; font-size:13px; font-weight:800; }
+.check-row .rlabel{ flex:1; font-size:13.5px; }
+.check-row .rlabel.done{ color:var(--muted2); text-decoration:line-through; }
+.check-row .rmeta{ font-size:11px; color:var(--muted); }
+
+/* ---------- Tag / pill ---------- */
+.pill{ display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:600; }
+.pill-green{ background:rgba(61,220,151,0.15); color:var(--secondary); }
+.pill-yellow{ background:rgba(242,193,78,0.15); color:var(--warn); }
+.pill-red{ background:rgba(239,95,108,0.15); color:var(--danger); }
+.pill-info{ background:rgba(124,140,255,0.15); color:var(--info); }
+
+/* ---------- Nav ---------- */
+.bottomnav{
+  position:fixed; left:0; right:0; bottom:0; z-index:50;
+  display:flex; justify-content:center;
+  padding:10px 12px calc(10px + env(safe-area-inset-bottom));
+  background:linear-gradient(0deg, var(--bg) 60%, transparent);
+}
+.bottomnav-inner{
+  display:flex; gap:2px; background:var(--panel-solid); border:1px solid var(--panel-border);
+  border-radius:22px; padding:6px; max-width:560px; width:100%; box-shadow:var(--shadow-lift);
+  overflow-x:auto; scrollbar-width:none;
+}
+.bottomnav-inner::-webkit-scrollbar{ display:none; }
+.navbtn{
+  flex:1; min-width:58px; border:none; background:transparent; color:var(--muted); cursor:pointer;
+  border-radius:16px; padding:8px 4px; display:flex; flex-direction:column; align-items:center; gap:3px;
+  font-size:10px; font-weight:600; transition:all .2s ease;
+}
+.navbtn .ic{ font-size:18px; }
+.navbtn.active{ background:var(--primary); color:var(--primary-ink); }
+
+/* ---------- Sections / tabs visibility ---------- */
+.section{ display:none; animation:fadein .35s ease; }
+.section.active{ display:block; }
+@keyframes fadein{ from{ opacity:0; transform:translateY(6px); } to{ opacity:1; transform:translateY(0); } }
+
+.page-title{ font-size:20px; margin:4px 0 16px; font-weight:700; }
+
+/* ---------- Chapter accordion ---------- */
+.subject-tabs{ display:flex; gap:8px; overflow-x:auto; padding-bottom:10px; margin-bottom:4px; scrollbar-width:none; }
+.subject-tabs::-webkit-scrollbar{ display:none; }
+.subj-chip{
+  flex-shrink:0; padding:9px 16px; border-radius:16px; border:1px solid var(--panel-border);
+  background:var(--panel); color:var(--muted); cursor:pointer; font-size:13px; font-weight:600;
+  display:flex; align-items:center; gap:8px; transition:all .2s ease;
+}
+.subj-chip.active{ background:var(--primary); color:var(--primary-ink); border-color:transparent; }
+.subj-chip .mini-ring{ width:16px;height:16px; border-radius:50%; background:conic-gradient(var(--secondary) var(--pct,0%), var(--panel-hi) 0); }
+
+.chapter{
+  border:1px solid var(--panel-border); border-radius:var(--radius-md); margin-bottom:10px; overflow:hidden;
+  background:var(--panel-hi);
+}
+.chapter-head{ display:flex; align-items:center; gap:10px; padding:12px 14px; cursor:pointer; }
+.chapter-head .title{ flex:1; font-size:13.5px; font-weight:600; }
+.chapter-head .title input{ background:transparent;border:none;color:var(--text);font:inherit;font-weight:600;width:100%; }
+.chapter-head .caret{ transition:transform .25s ease; color:var(--muted); }
+.chapter.open .caret{ transform:rotate(180deg); }
+.chapter-body{ display:none; padding:4px 14px 14px; }
+.chapter.open .chapter-body{ display:block; }
+.chapter-mini-bar{ width:60px; }
+
+.subitem-grid{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin-top:6px; }
+.subitem-grid.six{ grid-template-columns:repeat(3,1fr); }
+.subitem{
+  display:flex; flex-direction:column; align-items:center; gap:5px; font-size:9.5px; color:var(--muted); text-align:center;
+}
+.subitem .chk{ width:30px;height:30px; }
+
+.session-timer-row{
+  display:flex; align-items:center; gap:12px; margin-top:14px; padding:12px; border-radius:14px;
+  background:var(--panel-hi); border:1px solid var(--panel-border);
+}
+.session-timer-row .time-text{ font-family:var(--font-mono); font-size:20px; font-weight:600; flex:1; }
+.session-time-label{ font-family:var(--font-mono); font-size:11px; color:var(--muted); }
+
+.missed-banner{
+  display:flex; align-items:center; gap:12px; padding:14px 16px; border-radius:var(--radius-md);
+  background:rgba(239,95,108,0.14); border:1px solid rgba(239,95,108,0.35); color:var(--text);
+  margin-bottom:14px; cursor:pointer;
+}
+.missed-banner .ic{ font-size:20px; flex-shrink:0; }
+.missed-banner .txt{ flex:1; font-size:13px; }
+.missed-banner .go{ color:var(--danger); font-weight:700; font-size:13px; }
+.recovery-card{ margin-bottom:12px; }
+.recovery-card .badge-priority{ font-size:10px; padding:2px 8px; border-radius:10px; background:rgba(124,140,255,0.15); color:var(--info); font-weight:700; }
+
+/* ---------- Timer ---------- */
+.timer-ring-big{ display:flex; justify-content:center; margin:14px 0 6px; }
+.timer-display{ font-family:var(--font-display); font-size:44px; font-weight:700; }
+.timer-modes{ display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin:14px 0; }
+.mode-chip{
+  padding:8px 14px; border-radius:14px; border:1px solid var(--panel-border); background:var(--panel);
+  color:var(--muted); font-size:12px; font-weight:600; cursor:pointer;
+}
+.mode-chip.active{ background:var(--info); color:#fff; border-color:transparent; }
+.timer-controls{ display:flex; gap:10px; justify-content:center; margin-top:14px; }
+
+/* ---------- Timer fullscreen / expanded mode ---------- */
+body.timer-fullscreen{ background:#0a0b12; overflow:hidden; }
+body.timer-fullscreen .bottomnav{ display:none; }
+body.timer-fullscreen .topbar{ display:none; }
+body.timer-fullscreen .app{ max-width:100%; padding:0; margin:0; }
+body.timer-fullscreen .section{ display:none; }
+body.timer-fullscreen .section#sec-timer{ display:block; }
+body.timer-fullscreen .timer-hide-fs{ display:none !important; }
+body.timer-fullscreen #sec-timer{
+  min-height:100vh; min-height:100dvh; display:flex; align-items:center; justify-content:center;
+}
+body.timer-fullscreen .timer-card{
+  background:transparent; border:none; box-shadow:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  min-height:100vh; min-height:100dvh; border-radius:0; padding:24px;
+}
+body.timer-fullscreen .timer-ring-big{ margin:0; }
+body.timer-fullscreen #pomodoroSvg{ width:min(78vmin,560px); height:min(78vmin,560px); }
+body.timer-fullscreen .timer-display{ font-size:min(15vmin,110px); }
+body.timer-fullscreen #pomodoroPhaseLabel{ font-size:min(3.2vmin,20px); margin-top:10px; letter-spacing:.05em; text-transform:uppercase; }
+body.timer-fullscreen .timer-controls{ margin-top:min(6vmin,36px); }
+body.timer-fullscreen .timer-controls .btn{ padding:14px 26px; font-size:15px; border-radius:18px; }
+body.timer-fullscreen #timerFullscreenBtn{ opacity:0.55; }
+body.timer-fullscreen #timerFullscreenBtn:hover{ opacity:1; }
+
+/* ---------- Calendar ---------- */
+.cal-head{ display:flex; align-items:center; justify-content:space-between; margin-bottom:10px; }
+.cal-grid{ display:grid; grid-template-columns:repeat(7,1fr); gap:5px; }
+.cal-dow{ text-align:center; font-size:10px; color:var(--muted); padding-bottom:4px; }
+.cal-day{
+  aspect-ratio:1; border-radius:10px; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  font-size:11px; cursor:pointer; border:1px solid var(--panel-border); background:var(--panel-hi); position:relative;
+  gap:2px;
+}
+.cal-day.empty{ visibility:hidden; }
+.cal-day.today{ outline:2px solid var(--primary); }
+.cal-day .dot{ width:5px;height:5px;border-radius:50%; }
+.cal-day.green{ background:rgba(61,220,151,0.18); }
+.cal-day.yellow{ background:rgba(242,193,78,0.18); }
+.cal-day.red{ background:rgba(239,95,108,0.18); }
+
+/* ---------- Modal ---------- */
+.modal-bg{
+  position:fixed; inset:0; background:rgba(5,6,12,0.6); backdrop-filter:blur(4px); z-index:100;
+  display:none; align-items:flex-end; justify-content:center;
+}
+.modal-bg.show{ display:flex; }
+@media (min-width:640px){ .modal-bg{ align-items:center; } }
+.modal{
+  background:var(--panel-solid); border:1px solid var(--panel-border); border-radius:24px 24px 0 0;
+  padding:20px; width:100%; max-width:520px; max-height:85vh; overflow-y:auto;
+  box-shadow:0 -10px 40px rgba(0,0,0,0.4);
+  animation:slideup .3s ease;
+}
+@media (min-width:640px){ .modal{ border-radius:24px; } }
+@keyframes slideup{ from{ transform:translateY(30px); opacity:0; } to{ transform:translateY(0); opacity:1; } }
+.modal-head{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; }
+.modal-head h3{ margin:0; font-size:16px; }
+.field{ margin-bottom:12px; }
+.field label{ font-size:12px; color:var(--muted); display:block; margin-bottom:5px; }
+.field input, .field textarea, .field select{
+  width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--panel-border);
+  background:var(--panel-hi); color:var(--text); font:inherit; font-size:13.5px;
+}
+.field textarea{ min-height:80px; resize:vertical; }
+
+/* ---------- Toast ---------- */
+.toast-wrap{ position:fixed; top:16px; left:0; right:0; display:flex; justify-content:center; z-index:200; pointer-events:none; }
+.toast{
+  background:var(--panel-solid); border:1px solid var(--panel-border); padding:10px 18px; border-radius:16px;
+  font-size:13px; box-shadow:var(--shadow-lift); display:flex; align-items:center; gap:8px;
+  transform:translateY(-20px); opacity:0; transition:all .35s cubic-bezier(.34,1.56,.64,1);
+}
+.toast.show{ transform:translateY(0); opacity:1; }
+
+/* ---------- Confetti ---------- */
+.confetti-piece{ position:fixed; top:-10px; z-index:300; pointer-events:none; border-radius:2px; }
+
+/* ---------- Misc ---------- */
+.muted{ color:var(--muted); }
+.small{ font-size:11.5px; }
+.row{ display:flex; align-items:center; justify-content:space-between; gap:10px; }
+.flex-gap{ display:flex; gap:8px; flex-wrap:wrap; }
+.empty-state{ text-align:center; padding:30px 10px; color:var(--muted); }
+.empty-state .big-ic{ font-size:34px; margin-bottom:8px; }
+.quote-box{ font-style:italic; font-size:13px; color:var(--muted); line-height:1.5; }
+.badge-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+.badge{ text-align:center; padding:10px 4px; border-radius:14px; background:var(--panel-hi); border:1px solid var(--panel-border); }
+.badge.locked{ opacity:.35; filter:grayscale(1); }
+.badge .ic{ font-size:22px; }
+.badge .nm{ font-size:9px; margin-top:4px; color:var(--muted); }
+.xp-bar-wrap{ display:flex; align-items:center; gap:10px; }
+.level-chip{
+  width:44px;height:44px;border-radius:14px;background:linear-gradient(135deg,var(--info),#a2acff);
+  display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;color:#fff;flex-shrink:0;
+}
+.switch{ width:42px;height:24px;border-radius:20px;background:var(--panel-hi); position:relative; cursor:pointer; border:1px solid var(--panel-border); flex-shrink:0; }
+.switch::after{ content:""; position:absolute; width:18px;height:18px;border-radius:50%;background:var(--muted2); top:2px;left:2px; transition:all .2s ease; }
+.switch.on{ background:rgba(61,220,151,0.3); }
+.switch.on::after{ left:20px; background:var(--secondary); }
+.search-box{ display:flex; align-items:center; gap:8px; background:var(--panel); border:1px solid var(--panel-border); border-radius:14px; padding:9px 12px; margin-bottom:14px; }
+.search-box input{ background:transparent;border:none;color:var(--text);font:inherit;flex:1;outline:none; font-size:13px; }
+.chapter-list-item-name{ cursor:text; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+
+<div class="toast-wrap" id="toastWrap"></div>
+
+<div class="app">
+
+  <!-- ===================== TOP BAR ===================== -->
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">H</div>
+      <div class="brand-text">
+        <div class="t1">HSC Study Dashboard</div>
+        <div class="t2" id="todayLabel">—</div>
+      </div>
+    </div>
+    <div class="topbar-actions">
+      <button class="icon-btn" id="searchToggleBtn" title="Search">🔍</button>
+      <button class="icon-btn" id="themeToggleBtn" title="Toggle theme">🌙</button>
+      <button class="icon-btn" id="soundToggleBtn" title="Toggle sound">🔔</button>
+    </div>
+  </div>
+
+  <div class="search-box" id="searchBox" style="display:none">
+    <span>🔍</span>
+    <input type="text" id="searchInput" placeholder="Search subjects, chapters, tasks, habits...">
+  </div>
+  <div id="searchResults"></div>
+
+  <!-- ===================== HOME ===================== -->
+  <section class="section active" id="sec-home">
+
+    <div class="ticket">
+      <div class="ticket-perf"></div>
+      <div class="ticket-main">
+        <div class="ticket-eyebrow">HSC Board Exam</div>
+        <div class="ticket-title">Countdown to Exam Day</div>
+        <div class="ticket-date-row">
+          <span class="small muted">Exam date:</span>
+          <input type="date" class="ticket-date" id="examDateInput">
+        </div>
+      </div>
+      <div class="ticket-count">
+        <div class="num" id="examCountdown">—</div>
+        <div class="lbl">days left</div>
+      </div>
+    </div>
+
+    <div id="missedBanner"></div>
+
+    <div class="card" style="display:flex;align-items:center;gap:16px;">
+      <div class="ring-wrap" id="todayRingWrap">
+        <svg width="92" height="92" viewBox="0 0 92 92">
+          <circle class="ring-track" cx="46" cy="46" r="40" stroke-width="9"></circle>
+          <circle class="ring-bar" id="todayRingBar" cx="46" cy="46" r="40" stroke-width="9"></circle>
+        </svg>
+        <div class="ring-label" id="todayRingLabel" style="font-size:20px;">0%</div>
+      </div>
+      <div style="flex:1;">
+        <h3 style="margin:0 0 4px;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.06em;">Today's Progress</h3>
+        <div class="small muted" id="todayProgressSub">0 of 0 tasks done</div>
+        <div class="quote-box" id="motivationQuote" style="margin-top:8px;">Loading quote...</div>
+      </div>
+    </div>
+
+    <div class="grid grid-4">
+      <div class="stat-card">
+        <div class="label">Completed</div>
+        <div class="value" id="statCompleted">0</div>
+        <div class="sub">tasks today</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Remaining</div>
+        <div class="value" id="statRemaining">0</div>
+        <div class="sub">tasks today</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Study Hours</div>
+        <div class="value" id="statHours">0h</div>
+        <div class="sub">focus timer</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Daily Score</div>
+        <div class="value" id="statScore">0/100</div>
+        <div class="sub">performance</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><h3>Weekly Progress</h3><span class="small muted" id="weekRange"></span></div>
+      <div class="pbar" style="margin-bottom:8px;"><div class="pbar-fill" id="weekPbar" style="width:0%"></div></div>
+      <div class="row small muted"><span id="weekPctLabel">0% of weekly goal</span><span id="weekHoursLabel">0h / 0h</span></div>
+    </div>
+
+    <div class="grid grid-2">
+      <div class="card" style="margin-bottom:0;">
+        <div class="row">
+          <div>
+            <div class="small muted">Current Streak</div>
+            <div class="value" style="font-family:var(--font-display);font-size:26px;font-weight:700;" id="streakCurrent">0 🔥</div>
+          </div>
+        </div>
+      </div>
+      <div class="card" style="margin-bottom:0;">
+        <div class="xp-bar-wrap">
+          <div class="level-chip" id="levelChip">1</div>
+          <div style="flex:1;">
+            <div class="small muted">Level · <span id="coinsLabel">0</span> 🪙</div>
+            <div class="pbar" style="margin-top:5px;"><div class="pbar-fill" id="xpBar" style="width:0%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><h3 id="homeScheduleTitle">Today's Schedule</h3><button class="action" onclick="go('planner')">Open →</button></div>
+      <div id="homeSchedulePreview"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><h3>Today's Tasks</h3><button class="action" onclick="go('tasks')">Open →</button></div>
+      <div id="homeTasksPreview"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><h3>Daily Habits</h3><button class="action" onclick="go('habits')">Open →</button></div>
+      <div id="homeHabitsPreview"></div>
+    </div>
+
+  </section>
+
+  <!-- ===================== SUBJECTS ===================== -->
+  <section class="section" id="sec-subjects">
+    <div class="page-title">Subjects</div>
+    <div class="subject-tabs" id="subjectTabs"></div>
+    <div id="subjectDetail"></div>
+  </section>
+
+  <!-- ===================== WEEKLY PLANNER ===================== -->
+  <section class="section" id="sec-planner">
+    <div class="page-title">Weekly Planner</div>
+    <div class="card">
+      <div class="cal-head">
+        <button class="icon-btn" id="plannerPrevWeekBtn">‹</button>
+        <h3 class="display" id="plannerWeekLabel" style="margin:0;font-size:14px;">This Week</h3>
+        <button class="icon-btn" id="plannerNextWeekBtn">›</button>
+      </div>
+      <div class="subject-tabs" id="plannerDayChips"></div>
+    </div>
+    <div id="plannerSessions"></div>
+  </section>
+
+  <!-- ===================== RECOVERY QUEUE ===================== -->
+  <section class="section" id="sec-recovery">
+    <div class="row" style="margin-bottom:6px;">
+      <div class="page-title" style="margin-bottom:0;">Recovery Queue</div>
+      <button class="btn btn-ghost btn-sm" id="clearRecoveryBtn">Clear Queue</button>
+    </div>
+    <div class="card small muted">
+      Missed sessions land here automatically and get a suggested makeup time that never overlaps your routine. Nothing is ever deleted — remove just hides it from this active list.
+    </div>
+    <div id="recoveryList"></div>
+  </section>
+
+  <!-- ===================== TASKS ===================== -->
+  <section class="section" id="sec-tasks">
+    <div class="page-title">Daily Tasks</div>
+    <div class="card">
+      <div class="card-title"><h3>Today · <span id="tasksDateLabel"></span></h3>
+        <button class="action" id="addTaskBtn">+ Add task</button>
+      </div>
+      <div id="taskListToday"></div>
+    </div>
+  </section>
+
+  <!-- ===================== HABITS ===================== -->
+  <section class="section" id="sec-habits">
+    <div class="page-title">Habit Tracker</div>
+    <div class="card">
+      <div class="card-title"><h3>Today's Habits</h3><button class="action" id="addHabitBtn">+ Add habit</button></div>
+      <div id="habitListToday"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><h3>Streaks</h3></div>
+      <div class="grid grid-3">
+        <div class="stat-card"><div class="label">Daily</div><div class="value" id="streakDaily">0</div></div>
+        <div class="stat-card"><div class="label">Weekly</div><div class="value" id="streakWeekly">0</div></div>
+        <div class="stat-card"><div class="label">Longest</div><div class="value" id="streakLongest">0</div></div>
+      </div>
+      <div class="small muted" style="margin-top:10px;" id="missedDaysLabel">Missed days: 0</div>
+    </div>
+    <div class="card">
+      <div class="card-title"><h3>Phone Usage Tracker</h3></div>
+      <div class="field">
+        <label>Hours used today</label>
+        <input type="number" id="phoneHoursInput" step="0.1" min="0" placeholder="e.g. 1.5">
+      </div>
+      <div id="phoneStatusPill"></div>
+    </div>
+  </section>
+
+  <!-- ===================== EXTRAS: CALORIE + BUDGET ===================== -->
+  <section class="section" id="sec-extras">
+    <div class="page-title">Health &amp; Budget</div>
+
+    <div class="card">
+      <div class="card-title"><h3>Calorie Tracker</h3></div>
+      <div class="grid grid-2">
+        <div class="field" style="margin-bottom:0;">
+          <label>Daily calorie target</label>
+          <input type="number" id="calorieTargetInput" min="0" step="10" placeholder="e.g. 2000">
+        </div>
+        <div class="field" style="margin-bottom:0;">
+          <label>Consumed today</label>
+          <input type="number" id="calorieConsumedInput" min="0" step="10" placeholder="e.g. 1500">
+        </div>
+      </div>
+      <div class="ring-wrap" style="margin:16px auto 6px;display:flex;">
+        <svg width="120" height="120" viewBox="0 0 120 120">
+          <circle class="ring-track" cx="60" cy="60" r="50" stroke-width="11"></circle>
+          <circle class="ring-bar" id="calorieRingBar" cx="60" cy="60" r="50" stroke-width="11"></circle>
+        </svg>
+        <div class="ring-label" id="calorieRingLabel" style="font-size:13px;text-align:center;"></div>
+      </div>
+      <div id="calorieStatusPill" style="text-align:center;"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><h3>Monthly Budget</h3><span class="small muted" id="budgetMonthLabel"></span></div>
+      <div class="field">
+        <label>Budget for this month</label>
+        <input type="number" id="monthlyBudgetInput" min="0" step="50" placeholder="e.g. 5000">
+      </div>
+      <div class="pbar" style="margin-bottom:8px;"><div class="pbar-fill" id="budgetPbar" style="width:0%"></div></div>
+      <div class="row small muted"><span id="budgetSpentLabel">Spent 0</span><span id="budgetRemainingLabel">Remaining 0</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><h3>Expenses This Month</h3><button class="action" id="addExpenseBtn">+ Add expense</button></div>
+      <div id="expenseList"></div>
+    </div>
+  </section>
+
+  <!-- ===================== TIMER ===================== -->
+  <section class="section" id="sec-timer">
+    <div class="page-title timer-hide-fs">Study Timer</div>
+    <div class="card timer-card" id="timerCard" style="text-align:center;">
+      <button class="icon-btn" id="timerFullscreenBtn" title="Expand fullscreen" style="position:absolute; top:14px; right:14px; z-index:5;">⛶</button>
+      <div class="timer-modes timer-hide-fs" id="timerModes"></div>
+      <div class="timer-ring-big">
+        <div class="ring-wrap" id="pomodoroRingWrap">
+          <svg width="220" height="220" viewBox="0 0 220 220" id="pomodoroSvg">
+            <circle class="ring-track" cx="110" cy="110" r="96" stroke-width="14"></circle>
+            <circle class="ring-bar" id="pomodoroRingBar" cx="110" cy="110" r="96" stroke-width="14"></circle>
+          </svg>
+          <div class="ring-label timer-display" id="pomodoroTime">25:00</div>
+        </div>
+      </div>
+      <div class="small muted" id="pomodoroPhaseLabel">Focus session</div>
+      <div class="timer-controls">
+        <button class="btn btn-primary" id="timerStartBtn">▶ Start</button>
+        <button class="btn btn-ghost" id="timerResetBtn">↺ Reset</button>
+      </div>
+      <div class="field timer-hide-fs" style="max-width:220px;margin:16px auto 0;" id="customTimerField">
+        <label>Custom minutes / break</label>
+        <div style="display:flex;gap:8px;">
+          <input type="number" id="customFocusInput" placeholder="Focus" min="1">
+          <input type="number" id="customBreakInput" placeholder="Break" min="1">
+        </div>
+      </div>
+    </div>
+    <div class="grid grid-2 timer-hide-fs">
+      <div class="stat-card"><div class="label">Today's Focus</div><div class="value" id="focusToday">0m</div></div>
+      <div class="stat-card"><div class="label">Weekly Focus</div><div class="value" id="focusWeek">0m</div></div>
+    </div>
+  </section>
+
+  <!-- ===================== CALENDAR ===================== -->
+  <section class="section" id="sec-calendar">
+    <div class="page-title">Calendar</div>
+    <div class="card">
+      <div class="cal-head">
+        <button class="icon-btn" id="calPrevBtn">‹</button>
+        <h3 class="display" id="calMonthLabel" style="margin:0;font-size:15px;">—</h3>
+        <button class="icon-btn" id="calNextBtn">›</button>
+      </div>
+      <div class="cal-grid" id="calDowRow"></div>
+      <div class="cal-grid" id="calGrid" style="margin-top:6px;"></div>
+      <div class="flex-gap small muted" style="margin-top:12px;">
+        <span class="pill pill-green">Achieved</span>
+        <span class="pill pill-yellow">Partial</span>
+        <span class="pill pill-red">Missed</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== REPORT ===================== -->
+  <section class="section" id="sec-report">
+    <div class="page-title">Weekly Report</div>
+    <div class="card">
+      <div class="card-title"><h3>This Week</h3></div>
+      <div class="grid grid-2" id="reportStats"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><h3>Strongest / Weakest Subject</h3></div>
+      <div id="reportSubjectSummary"></div>
+    </div>
+    <div class="card">
+      <div class="card-title"><h3>Subject Chart</h3></div>
+      <div id="reportChart"></div>
+    </div>
+  </section>
+
+  <!-- ===================== GOALS ===================== -->
+  <section class="section" id="sec-goals">
+    <div class="page-title">Goals</div>
+    <div id="goalsList"></div>
+  </section>
+
+  <!-- ===================== MORE (motivation/badges/backup/settings) ===================== -->
+  <section class="section" id="sec-more">
+    <div class="page-title">More</div>
+
+    <div class="card">
+      <div class="card-title"><h3>Daily &amp; Weekly Challenge</h3></div>
+      <div id="challengeBox"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><h3>Achievements</h3></div>
+      <div class="badge-grid" id="badgeGrid"></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><h3>Appearance</h3></div>
+      <div class="row" style="margin-bottom:10px;">
+        <span class="small">Dark theme</span>
+        <div class="switch" id="darkSwitch"></div>
+      </div>
+      <div class="row">
+        <span class="small">Sound effects</span>
+        <div class="switch" id="soundSwitch"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><h3>Cloud Sync</h3><span class="small mono" id="syncStatusPill" style="color:var(--muted);">●&nbsp;offline</span></div>
+      <div class="small muted" style="margin-bottom:10px;">This device auto-syncs to the cloud. Just open this same file on any other device (phone, PC) — it'll sync automatically, no setup needed.</div>
+      <div class="small muted" id="syncLastSynced" style="margin-top:2px;"></div>
+      <details style="margin-top:10px;">
+        <summary class="small muted" style="cursor:pointer;">Advanced (use a separate/independent copy)</summary>
+        <div class="field" style="margin:10px 0;">
+          <label>Sync code</label>
+          <input id="syncCodeInput" placeholder="e.g. 7K2P9X" class="mono" style="text-transform:uppercase;">
+        </div>
+        <div class="flex-gap" style="margin-bottom:10px;">
+          <button class="btn btn-ghost" id="syncGenBtn">✨ New Code</button>
+          <button class="btn btn-ghost" id="syncLinkBtn">🔗 Use This Code</button>
+        </div>
+        <div class="flex-gap">
+          <button class="btn btn-ghost" id="syncPushBtn">⬆ Push to Cloud</button>
+          <button class="btn btn-ghost" id="syncPullBtn">⬇ Pull from Cloud</button>
+          <button class="btn btn-ghost" id="syncUnlinkBtn">↩ Reset to Default</button>
+        </div>
+      </details>
+    </div>
+
+    <div class="card">
+      <div class="card-title"><h3>Backup &amp; Restore</h3></div>
+      <div class="flex-gap">
+        <button class="btn btn-ghost" id="exportBtn">⬇ Export JSON</button>
+        <button class="btn btn-ghost" id="importBtn">⬆ Import JSON</button>
+        <input type="file" id="importFile" accept="application/json" style="display:none">
+        <button class="btn btn-danger" id="resetBtn">⚠ Reset All Data</button>
+      </div>
+    </div>
+
+    <div class="card small muted" style="text-align:center;">
+      HSC Study Dashboard · works offline-first · syncs to the cloud when linked
+    </div>
+  </section>
+
+</div>
+
+<!-- ===================== BOTTOM NAV ===================== -->
+<div class="bottomnav">
+  <div class="bottomnav-inner" id="bottomNav">
+    <button class="navbtn active" data-sec="home"><span class="ic">🏠</span>Home</button>
+    <button class="navbtn" data-sec="subjects"><span class="ic">📚</span>Subjects</button>
+    <button class="navbtn" data-sec="planner"><span class="ic">🗓️</span>Planner</button>
+    <button class="navbtn" data-sec="recovery"><span class="ic">🔁</span>Recovery</button>
+    <button class="navbtn" data-sec="tasks"><span class="ic">✅</span>Tasks</button>
+    <button class="navbtn" data-sec="habits"><span class="ic">🔥</span>Habits</button>
+    <button class="navbtn" data-sec="extras"><span class="ic">🧾</span>Health</button>
+    <button class="navbtn" data-sec="timer"><span class="ic">⏱️</span>Timer</button>
+    <button class="navbtn" data-sec="calendar"><span class="ic">📅</span>Calendar</button>
+    <button class="navbtn" data-sec="report"><span class="ic">📊</span>Report</button>
+    <button class="navbtn" data-sec="goals"><span class="ic">🎯</span>Goals</button>
+    <button class="navbtn" data-sec="more"><span class="ic">⋯</span>More</button>
+  </div>
+</div>
+
+<!-- ===================== MODAL ===================== -->
+<div class="modal-bg" id="modalBg">
+  <div class="modal" id="modalContent"></div>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ================================================================
+   1. CONSTANTS & DEFAULT DATA
+   ================================================================ */
+const SUBJECT_NAMES = ["Bangla","English","Economics","History","Civics","Geography","ICT"];
+const DEFAULT_TASKS = [
+  {name:"Economics (1 hour)", hours:1},
+  {name:"History (1.5 hour)", hours:1.5},
+  {name:"Civics/Geography (2 hours)", hours:2},
+  {name:"Bangla/English (2 hours)", hours:2},
+  {name:"ICT/Revision (1.5 hours)", hours:1.5},
+  {name:"50 MCQ", hours:0},
+  {name:"1 Creative Writing (CQ)", hours:0},
+  {name:"Revise Yesterday", hours:0}
+];
+const DEFAULT_HABITS = [
+  "Slept 7+ hours","Phone under 2 hours","Prayer completed","Drink 2L Water",
+  "Exercise","Reviewed Private Lessons","No Procrastination"
+];
+const DEFAULT_GOALS = [
+  {name:"HSC GPA 5.00", progress:0},
+  {name:"DU Admission", progress:0},
+  {name:"BUP Admission", progress:0},
+  {name:"IELTS", progress:0},
+  {name:"Study Abroad Scholarship", progress:0}
+];
+const WEEKDAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+const WEEKLY_SCHEDULE = {
+  Monday:[
+    {time:"09:30–10:30", label:"Economics", start:"09:30", end:"10:30"},
+    {time:"11:00–1:00", label:"History", start:"11:00", end:"13:00"},
+    {time:"2:00–4:00", label:"History", start:"14:00", end:"16:00"},
+    {time:"8:00–10:00", label:"English", start:"20:00", end:"22:00"},
+    {time:"10:15–11:45", label:"ICT + Revision + MCQ", start:"22:15", end:"23:45"}
+  ],
+  Tuesday:[
+    {time:"7:00–9:00", label:"Civics", start:"07:00", end:"09:00"},
+    {time:"9:30–10:30", label:"Bangla", start:"09:30", end:"10:30"},
+    {time:"2:00–4:00", label:"Civics", start:"14:00", end:"16:00"},
+    {time:"8:00–10:00", label:"English", start:"20:00", end:"22:00"},
+    {time:"10:15–11:45", label:"Geography Revision + MCQ", start:"22:15", end:"23:45"}
+  ],
+  Wednesday:[
+    {time:"9:30–10:30", label:"Economics", start:"09:30", end:"10:30"},
+    {time:"11:00–1:00", label:"Geography", start:"11:00", end:"13:00"},
+    {time:"2:00–4:00", label:"Geography", start:"14:00", end:"16:00"},
+    {time:"8:00–10:00", label:"English", start:"20:00", end:"22:00"},
+    {time:"10:15–11:45", label:"ICT + Revision", start:"22:15", end:"23:45"}
+  ],
+  Thursday:[
+    {time:"7:00–9:00", label:"History", start:"07:00", end:"09:00"},
+    {time:"9:30–10:30", label:"Bangla", start:"09:30", end:"10:30"},
+    {time:"2:00–4:00", label:"Civics", start:"14:00", end:"16:00"},
+    {time:"8:00–10:00", label:"English", start:"20:00", end:"22:00"},
+    {time:"10:15–11:45", label:"Weekly MCQ + Revision", start:"22:15", end:"23:45"}
+  ],
+  Friday:[
+    {time:"10:30–12:30", label:"History", start:"10:30", end:"12:30"},
+    {time:"2:00–4:00", label:"Geography / Weak Subject", start:"14:00", end:"16:00"},
+    {time:"5:00–6:30", label:"Weekly Revision", start:"17:00", end:"18:30"},
+    {time:"8:00–10:00", label:"English", start:"20:00", end:"22:00"},
+    {time:"10:15–11:45", label:"Weekly Mock Test + Mistake Analysis", start:"22:15", end:"23:45"}
+  ],
+  Saturday:[
+    {time:"9:30–10:30", label:"Economics", start:"09:30", end:"10:30"},
+    {time:"11:00–1:00", label:"Civics", start:"11:00", end:"13:00"},
+    {time:"2:00–4:00", label:"Geography", start:"14:00", end:"16:00"},
+    {time:"8:00–10:00", label:"English", start:"20:00", end:"22:00"},
+    {time:"10:15–11:45", label:"ICT + Weekly Revision", start:"22:15", end:"23:45"}
+  ],
+  Sunday:[
+    {time:"7:00–9:00", label:"History / Civics (Rotation)", start:"07:00", end:"09:00"},
+    {time:"9:30–10:30", label:"Bangla", start:"09:30", end:"10:30"},
+    {time:"2:00–4:00", label:"Geography / Weak Subject", start:"14:00", end:"16:00"},
+    {time:"8:00–10:00", label:"English", start:"20:00", end:"22:00"},
+    {time:"10:15–11:45", label:"ICT + Weekly Planning + Revision", start:"22:15", end:"23:45"}
+  ]
+};
+// Subjects prioritized when the recovery engine has to choose which
+// missed session claims a free slot first.
+const RECOVERY_HIGH_PRIORITY = ["History","Civics","Geography"];
+// Economics stays fixed on these days via its own routine slot; the recovery
+// engine never overlaps any existing slot anyway, so a recovered Economics
+// session is free to land on any other day without touching this slot.
+const FIXED_ECONOMICS_DAYS = ["Monday","Wednesday","Saturday"];
+const MAX_RECOVERY_PER_DAY = 2;
+const SESSION_CHECKS = [
+  ["startedOnTime","Started on Time"],
+  ["completedReading","Completed Reading"],
+  ["finishedNotes","Finished Notes"],
+  ["completedMCQ","Completed MCQ"],
+  ["completedCQ","Completed CQ/Written"],
+  ["revisionDone","Revision Done"]
+];
+const QUOTES = [
+  "Discipline is choosing between what you want now and what you want most.",
+  "Small steps every day lead to big results at the board exam.",
+  "Your future self is watching you right now through memories.",
+  "MCQ by MCQ, chapter by chapter — the GPA 5 builds itself.",
+  "DU and BUP don't require luck. They require consistency.",
+  "Every revision today is a mark saved tomorrow.",
+  "You don't have to be extreme, just consistent.",
+  "The pain of discipline is nothing like the pain of regret.",
+  "Study like your rank depends on it — because it does.",
+  "One more page tonight is one less regret at 2 AM before the exam."
+];
+const BADGES = [
+  {id:"first_task", ic:"✅", nm:"First Task"},
+  {id:"streak3", ic:"🔥", nm:"3-Day Streak"},
+  {id:"streak7", ic:"🔥", nm:"7-Day Streak"},
+  {id:"streak30", ic:"🏆", nm:"30-Day Streak"},
+  {id:"chapter1", ic:"📘", nm:"1st Chapter"},
+  {id:"chapter10", ic:"📚", nm:"10 Chapters"},
+  {id:"mcq100", ic:"🎯", nm:"100 MCQs"},
+  {id:"mcq500", ic:"🎯", nm:"500 MCQs"},
+  {id:"level5", ic:"⭐", nm:"Level 5"},
+  {id:"level10", ic:"🌟", nm:"Level 10"},
+  {id:"habitperfect", ic:"💎", nm:"Perfect Day"},
+  {id:"phonegreen7", ic:"📵", nm:"Low Phone x7"}
+];
+const POMODORO_MODES = [
+  {id:"25_5", label:"25 / 5", focus:25, brk:5},
+  {id:"50_10", label:"50 / 10", focus:50, brk:10},
+  {id:"90_20", label:"90 / 20", focus:90, brk:20},
+  {id:"custom", label:"Custom", focus:0, brk:0}
+];
+const STORE_KEY = "hsc_dashboard_state_v1";
+
+/* ================================================================
+   1b. CLOUD SYNC (Supabase)
+   ================================================================ */
+const SUPABASE_URL = "https://kjibrpcduivhxooqrrab.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImtqaWJycGNkdWl2aHhvb3FycmFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODM1OTEwMTgsImV4cCI6MjA5OTE2NzAxOH0.Mu8f2ALq1QzaemTwWhloEgrQ52Jk2YFkiMFk2wvFnaQ";
+const SYNC_TABLE = "lifeos_backups";
+const SYNC_CODE_KEY = "hsc_dashboard_sync_code";
+/* This file has one fixed sync code baked in, so every device that opens
+   THIS file automatically shares the same cloud data — zero setup, zero
+   pairing. If you ever want a separate/independent copy of the dashboard
+   (e.g. to give to someone else), use the Advanced panel to switch to a
+   different code on that copy. */
+const BUILT_IN_SYNC_CODE = "hsc-study-dashboard-5hzmbt";
+let sb = null;
+try{ sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY); }catch(e){ sb = null; }
+
+let syncPushTimer = null;
+let syncing = false;
+
+function getSyncCode(){ return localStorage.getItem(SYNC_CODE_KEY) || BUILT_IN_SYNC_CODE; }
+function setSyncCodeLocal(code){ localStorage.setItem(SYNC_CODE_KEY, code); }
+function clearSyncCodeLocal(){ localStorage.removeItem(SYNC_CODE_KEY); }
+function genSyncCode(){
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let out = "";
+  for(let i=0;i<6;i++) out += chars[Math.floor(Math.random()*chars.length)];
+  return out;
+}
+function setSyncStatus(status, extra){
+  const pill = document.getElementById("syncStatusPill");
+  if(!pill) return;
+  const map = {
+    offline: ["● offline", "var(--muted)"],
+    syncing: ["● syncing…", "var(--info)"],
+    synced:  ["● synced", "var(--secondary)"],
+    error:   ["● sync error", "var(--danger)"]
+  };
+  const m = map[status] || map.offline;
+  pill.textContent = m[0];
+  pill.style.color = m[1];
+  const lastEl = document.getElementById("syncLastSynced");
+  if(lastEl){
+    if(status==="synced") lastEl.textContent = "Last synced " + new Date().toLocaleTimeString();
+    else if(extra) lastEl.textContent = extra;
+  }
+}
+function queueCloudPush(){
+  if(!sb || !getSyncCode()) return;
+  clearTimeout(syncPushTimer);
+  syncPushTimer = setTimeout(pushStateToCloud, 1500);
+}
+function describeCloudError(e){
+  if(!e) return "unknown error";
+  if(typeof e === "string") return e;
+  const parts = [e.message, e.details, e.hint].filter(Boolean);
+  if(parts.length) return parts.join(" — ");
+  try{ return JSON.stringify(e); }catch(_){ return String(e); }
+}
+async function pushStateToCloud(){
+  const code = getSyncCode();
+  if(!sb || !code) return {ok:false, error:"not configured"};
+  try{
+    syncing = true;
+    setSyncStatus("syncing");
+    const { error } = await sb.from(SYNC_TABLE).upsert({
+      user_name: code,
+      data: state,
+      updated_at: new Date().toISOString()
+    }, { onConflict: "user_name" });
+    if(error) throw error;
+    setSyncStatus("synced");
+    return {ok:true};
+  }catch(e){
+    const msg = describeCloudError(e);
+    console.error("Cloud push failed:", msg, e);
+    setSyncStatus("error", "Push failed: "+msg);
+    return {ok:false, error:msg};
+  }finally{ syncing=false; }
+}
+async function pullStateFromCloud(code, {silent}={}){
+  if(!sb || !code) return null;
+  try{
+    if(!silent) setSyncStatus("syncing");
+    const { data, error } = await sb.from(SYNC_TABLE).select("data,updated_at").eq("user_name", code).maybeSingle();
+    if(error) throw error;
+    if(!silent) setSyncStatus(data ? "synced" : "offline", data ? null : "No cloud data for this code yet.");
+    return data;
+  }catch(e){
+    const msg = describeCloudError(e);
+    console.error("Cloud pull failed:", msg, e);
+    if(!silent) setSyncStatus("error", "Pull failed: "+msg);
+    return null;
+  }
+}
+function updateSyncFieldFromStorage(){
+  const input = document.getElementById("syncCodeInput");
+  if(input) input.value = getSyncCode();
+}
+function adoptRemoteState(remoteData){
+  state = Object.assign(defaultState(), remoteData, {subjects: Object.assign(defaultState().subjects, remoteData.subjects||{})});
+  localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  localStorage.setItem("hsc_dashboard_last_local_save", Date.now().toString());
+}
+
+/* ================================================================
+   2. STATE
+   ================================================================ */
+function uid(){ return Math.random().toString(36).slice(2,10); }
+function todayStr(d){ d=d||new Date(); return d.toISOString().slice(0,10); }
+function seedChapters(){
+  return []; // no placeholder "Chapter 1/2/3" — the user names every chapter themselves via "+ Add chapter"
+}
+function defaultState(){
+  const subjects={};
+  SUBJECT_NAMES.forEach(n=>{ subjects[n]={ chapters:seedChapters(), mcqCount:0, writtenCount:0, notes:"" }; });
+  return {
+    examDate: "2027-02-15",
+    xp:0, coins:0, level:1,
+    badges:[],
+    theme:"dark", sound:true,
+    subjects,
+    customTasks:[], // {id,name,hours}
+    removedDefaultTasks:[], // names of default tasks removed
+    customHabits:[], // names of custom habits
+    removedDefaultHabits:[], // names of default habits removed
+    calorieTarget:2000,
+    monthlyBudgets:{}, // "YYYY-MM" -> number
+    expenses:[], // {id, name, amount, category, date}
+    dailyLog:{}, // date -> {tasks:{name:true}, habits:{name:true}, phoneHours, focusMinutes, note, caloriesConsumed, sessions:{}}
+    recoveryQueue:[], // [{id,date,sessionId,label,originalTime,originalStart,originalEnd,durationMinutes,status,suggestedDate,suggestedStart,suggestedEnd}]
+    recoveryActivatedDate: todayStr(), // never scan for "missed" sessions before this date
+    timerMode:"25_5", customFocus:25, customBreak:5,
+    goals: JSON.parse(JSON.stringify(DEFAULT_GOALS)),
+    calMonthOffset:0,
+    lastQuoteDate:"", quoteIndex:0
+  };
+}
+let state = loadState();
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(!raw) return defaultState();
+    const parsed = JSON.parse(raw);
+    const def = defaultState();
+    // shallow-merge to survive schema additions
+    return Object.assign(def, parsed, {subjects: Object.assign(def.subjects, parsed.subjects||{})});
+  }catch(e){ return defaultState(); }
+}
+function saveState(){
+  localStorage.setItem(STORE_KEY, JSON.stringify(state));
+  localStorage.setItem("hsc_dashboard_last_local_save", Date.now().toString());
+  queueCloudPush();
+}
+function getLog(date){
+  date = date || todayStr();
+  if(!state.dailyLog[date]) state.dailyLog[date] = {tasks:{}, habits:{}, phoneHours:null, focusMinutes:0, note:"", sessions:{}};
+  if(!state.dailyLog[date].sessions) state.dailyLog[date].sessions = {};
+  return state.dailyLog[date];
+}
+function dateForWeekday(weekdayName, weekOffset){
+  const today = new Date();
+  const todayDow = today.getDay();
+  const idx = WEEKDAY_NAMES.indexOf(weekdayName);
+  const diff = idx - todayDow + (weekOffset||0)*7;
+  const d = new Date(today);
+  d.setDate(today.getDate()+diff);
+  return d;
+}
+function sessionsForWeekday(dayName){ return WEEKLY_SCHEDULE[dayName] || []; }
+function getSession(date, sessionId){
+  const log = getLog(date);
+  if(!log.sessions[sessionId]) log.sessions[sessionId] = {checks:{}, notes:"", chapter:"", timerSeconds:0, completed:false, missed:false, recoveryQueued:false};
+  if(log.sessions[sessionId].chapter===undefined) log.sessions[sessionId].chapter="";
+  if(log.sessions[sessionId].missed===undefined) log.sessions[sessionId].missed=false;
+  if(log.sessions[sessionId].recoveryQueued===undefined) log.sessions[sessionId].recoveryQueued=false;
+  return log.sessions[sessionId];
+}
+function isSessionComplete(sess){ return SESSION_CHECKS.every(([k])=>sess.checks[k]); }
+function toMinutes(hhmm){ const [h,m] = hhmm.split(":").map(Number); return h*60+m; }
+function minutesToHHMM(mins){ const h=Math.floor(mins/60), m=mins%60; return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0"); }
+function minutesSinceMidnight(d){ return d.getHours()*60+d.getMinutes(); }
+function formatHHMMDisplay(hhmm){
+  if(!hhmm) return "";
+  const [h,m] = hhmm.split(":").map(Number);
+  const ampm = h>=12? "PM":"AM";
+  const h12 = ((h%12)||12);
+  return h12+":"+String(m).padStart(2,"0")+" "+ampm;
+}
+function computeSessionsForDate(date){
+  const dayName = WEEKDAY_NAMES[new Date(date).getDay()];
+  const defs = sessionsForWeekday(dayName);
+  let done=0;
+  defs.forEach((def,idx)=>{ const sid=dayName+"-"+idx; if(isSessionComplete(getSession(date,sid))) done++; });
+  return {done, total:defs.length, pct: defs.length? Math.round(done/defs.length*100):0};
+}
+function bumpSubjectProgressForLabel(label){
+  SUBJECT_NAMES.forEach(n=>{
+    if(label.toLowerCase().includes(n.toLowerCase())){
+      state.subjects[n].mcqCount = (state.subjects[n].mcqCount||0)+1;
+      state.subjects[n].writtenCount = (state.subjects[n].writtenCount||0)+1;
+    }
+  });
+}
+
+/* ================================================================
+   3. UTIL / UI HELPERS
+   ================================================================ */
+function $(sel){ return document.querySelector(sel); }
+function $all(sel){ return Array.from(document.querySelectorAll(sel)); }
+function el(tag, cls, html){ const e=document.createElement(tag); if(cls) e.className=cls; if(html!==undefined) e.innerHTML=html; return e; }
+
+function toast(msg, ic){
+  const wrap = $("#toastWrap");
+  const t = el("div","toast", (ic||"✨")+" "+msg);
+  wrap.appendChild(t);
+  requestAnimationFrame(()=>t.classList.add("show"));
+  setTimeout(()=>{ t.classList.remove("show"); setTimeout(()=>t.remove(),400); }, 2400);
+  if(state.sound) playBeep();
+}
+function playBeep(){
+  try{
+    const ctx = new (window.AudioContext||window.webkitAudioContext)();
+    const o = ctx.createOscillator(); const g = ctx.createGain();
+    o.type="sine"; o.frequency.value=740;
+    g.gain.setValueAtTime(0.06, ctx.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime+0.25);
+    o.connect(g); g.connect(ctx.destination);
+    o.start(); o.stop(ctx.currentTime+0.25);
+  }catch(e){}
+}
+function confetti(){
+  const colors=["#e8b339","#3ddc97","#7c8cff","#ef5f6c","#f2c14e"];
+  for(let i=0;i<28;i++){
+    const p = el("div","confetti-piece");
+    const size = 6+Math.random()*6;
+    p.style.width=size+"px"; p.style.height=size+"px";
+    p.style.left=Math.random()*100+"vw";
+    p.style.background=colors[Math.floor(Math.random()*colors.length)];
+    p.style.transform="rotate("+(Math.random()*360)+"deg)";
+    document.body.appendChild(p);
+    const dur = 1800+Math.random()*1200;
+    p.animate([
+      {transform:p.style.transform+" translateY(0)", opacity:1},
+      {transform:p.style.transform+" translateY(100vh)", opacity:0.2}
+    ], {duration:dur, easing:"ease-in"});
+    setTimeout(()=>p.remove(), dur);
+  }
+}
+function openModal(title, bodyHtml, footerHtml){
+  const m = $("#modalContent");
+  m.innerHTML = '<div class="modal-head"><h3>'+title+'</h3><button class="icon-btn" id="modalCloseBtn">✕</button></div>'
+    + '<div id="modalBody">'+bodyHtml+'</div>'
+    + (footerHtml? '<div style="margin-top:14px;">'+footerHtml+'</div>' : '');
+  $("#modalBg").classList.add("show");
+  $("#modalCloseBtn").onclick = closeModal;
+}
+function closeModal(){ $("#modalBg").classList.remove("show"); }
+$("#modalBg").addEventListener("click", e=>{ if(e.target.id==="modalBg") closeModal(); });
+
+/* ================================================================
+   3b. SMART MISSED TASK RECOVERY
+   ================================================================
+   A session is "missed" once its scheduled end time has passed and it
+   was never marked complete. Missed sessions move to a recovery queue
+   (never deleted) and get an auto-suggested makeup slot: the engine
+   only looks at genuinely free time — the gaps between the day's fixed
+   routine blocks and any other recovery sessions already placed that
+   day — so it never overlaps or replaces a planned session. History,
+   Civics and Geography get first pick of free slots; Economics stays
+   untouched on Mon/Wed/Sat since recovery never overlaps its slot
+   anyway; at most two recovery sessions land on the same day so the
+   backlog spreads out instead of piling onto one day.
+   ================================================================ */
+function buildBusyIntervals(dateStr, dayName, excludeQueueId){
+  const blocks = [];
+  sessionsForWeekday(dayName).forEach(def=>{
+    if(def.start && def.end) blocks.push([toMinutes(def.start), toMinutes(def.end)]);
+  });
+  state.recoveryQueue.forEach(q=>{
+    if(q.id===excludeQueueId || q.status==="removed") return;
+    if(q.suggestedDate===dateStr && q.suggestedStart && q.suggestedEnd){
+      blocks.push([toMinutes(q.suggestedStart), toMinutes(q.suggestedEnd)]);
+    }
+  });
+  blocks.sort((a,b)=>a[0]-b[0]);
+  return blocks;
+}
+function findFreeSlot(busyBlocks, rangeStart, rangeEnd, duration){
+  let cursor = rangeStart;
+  for(const [bs,be] of busyBlocks){
+    if(bs>cursor && bs-cursor>=duration) return cursor;
+    if(be>cursor) cursor = Math.max(cursor,be);
+  }
+  if(rangeEnd-cursor>=duration) return cursor;
+  return null;
+}
+const STUDY_DAY_START_MIN = 7*60; // 07:00 — don't suggest recovery slots in overnight sleep hours
+const STUDY_DAY_END_MIN = 24*60;  // midnight
+function findRecoverySlot(entry, excludeQueueId){
+  const originDate = new Date(entry.date);
+  for(let i=0;i<=13;i++){
+    const dt = new Date(originDate); dt.setDate(originDate.getDate()+i);
+    const ds = todayStr(dt);
+    if(ds < todayStr()) continue; // never suggest a slot in the past
+    const dayCount = state.recoveryQueue.filter(q=> q.id!==excludeQueueId && q.status!=="removed" && q.suggestedDate===ds).length;
+    if(dayCount>=MAX_RECOVERY_PER_DAY) continue;
+    const dayName = WEEKDAY_NAMES[dt.getDay()];
+    const busy = buildBusyIntervals(ds, dayName, excludeQueueId);
+    const isToday = ds===todayStr();
+    const searchStart = isToday? Math.max(STUDY_DAY_START_MIN, Math.min(STUDY_DAY_END_MIN, minutesSinceMidnight(new Date())+10)) : STUDY_DAY_START_MIN;
+    const startMin = findFreeSlot(busy, searchStart, STUDY_DAY_END_MIN, entry.durationMinutes);
+    if(startMin!==null){
+      return {date:ds, start:minutesToHHMM(startMin), end:minutesToHHMM(startMin+entry.durationMinutes)};
+    }
+  }
+  return null;
+}
+function addToRecoveryQueue(date, sessionId, def){
+  const rawDuration = (def.start && def.end)? (toMinutes(def.end)-toMinutes(def.start)) : 45;
+  const durationMinutes = Math.max(20, Math.min(rawDuration, 60)); // recovery sessions are focused catch-ups, capped at 60m
+  const entry = {
+    id: uid(), date, sessionId, label: def.label,
+    originalTime: def.time||"Anytime", originalStart: def.start||"", originalEnd: def.end||"",
+    durationMinutes, status:"pending",
+    suggestedDate:null, suggestedStart:null, suggestedEnd:null
+  };
+  const slot = findRecoverySlot(entry, entry.id);
+  if(slot){ entry.suggestedDate=slot.date; entry.suggestedStart=slot.start; entry.suggestedEnd=slot.end; }
+  state.recoveryQueue.push(entry);
+}
+function scanForMissedSessions(){
+  const now = new Date();
+  const activation = state.recoveryActivatedDate || todayStr();
+  const lookbackDays = 21;
+  const newlyMissed = [];
+  for(let i=lookbackDays-1;i>=0;i--){
+    const dt = new Date(); dt.setDate(dt.getDate()-i);
+    const ds = todayStr(dt);
+    if(ds < activation) continue; // never flag days before this feature was active for this user
+    const dayName = WEEKDAY_NAMES[dt.getDay()];
+    sessionsForWeekday(dayName).forEach((def,idx)=>{
+      const sid = dayName+"-"+idx;
+      const sess = getSession(ds, sid);
+      if(sess.recoveryQueued || isSessionComplete(sess)) return;
+      const endStr = def.end || "23:59";
+      const endDt = new Date(ds+"T"+endStr+":00");
+      if(now > endDt) newlyMissed.push({ds,sid,def,sess});
+    });
+  }
+  if(!newlyMissed.length) return false;
+  newlyMissed.sort((a,b)=>{
+    const ap = RECOVERY_HIGH_PRIORITY.some(p=>a.def.label.includes(p))?0:1;
+    const bp = RECOVERY_HIGH_PRIORITY.some(p=>b.def.label.includes(p))?0:1;
+    if(ap!==bp) return ap-bp;
+    return a.ds.localeCompare(b.ds);
+  });
+  newlyMissed.forEach(({ds,sid,def,sess})=>{
+    sess.missed = true;
+    sess.recoveryQueued = true;
+    addToRecoveryQueue(ds, sid, def);
+  });
+  saveState();
+  return true;
+}
+function pendingRecoveryCount(){
+  return state.recoveryQueue.filter(q=>q.status==="pending").length;
+}
+function renderMissedBanner(){
+  const banner = $("#missedBanner");
+  if(!banner) return;
+  const count = pendingRecoveryCount();
+  if(count>0){
+    banner.innerHTML = '<div class="missed-banner"><span class="ic">⚠️</span><span class="txt">You have '+count+' missed study session'+(count>1?"s":"")+' waiting for recovery.</span><span class="go">View →</span></div>';
+    banner.querySelector(".missed-banner").onclick = ()=> go("recovery");
+  } else {
+    banner.innerHTML = "";
+  }
+}
+function toggleRecoveryComplete(id){
+  const q = state.recoveryQueue.find(x=>x.id===id);
+  if(!q) return;
+  q.completed = !q.completed;
+  if(q.completed){
+    addXP(15,4);
+    bumpSubjectProgressForLabel(q.label);
+    if(!document.hidden){ toast("Recovery session completed!","📗"); confetti(); }
+    checkBadges();
+  }
+  saveState();
+  renderRecoveryQueue();
+  renderHome();
+}
+function openRescheduleModal(id){
+  const q = state.recoveryQueue.find(x=>x.id===id);
+  if(!q) return;
+  openModal("Reschedule Recovery Session",
+    '<div class="field"><label>New date</label><input type="date" id="rescheduleDate" value="'+(q.suggestedDate||todayStr())+'"></div>'
+    +'<div class="field"><label>Start time</label><input type="time" id="rescheduleStart" value="'+(q.suggestedStart||"18:00")+'"></div>'
+    +'<div class="field"><label>Duration (minutes)</label><input type="number" id="rescheduleDuration" min="15" step="5" value="'+q.durationMinutes+'"></div>',
+    '<button class="btn btn-primary btn-block" id="saveRescheduleBtn">Save New Time</button>'
+  );
+  $("#saveRescheduleBtn").onclick = ()=>{
+    const date = $("#rescheduleDate").value;
+    const start = $("#rescheduleStart").value;
+    const duration = parseInt($("#rescheduleDuration").value)||q.durationMinutes;
+    if(!date||!start) return;
+    q.suggestedDate = date;
+    q.suggestedStart = start;
+    q.durationMinutes = duration;
+    q.suggestedEnd = minutesToHHMM(toMinutes(start)+duration);
+    q.status = "pending";
+    saveState(); closeModal(); renderRecoveryQueue(); renderMissedBanner();
+    toast("Recovery time updated");
+  };
+}
+function buildRecoveryCard(q){
+  const card = el("div","card recovery-card");
+  const isHigh = RECOVERY_HIGH_PRIORITY.some(p=>q.label.includes(p));
+  const origDate = new Date(q.date).toLocaleDateString(undefined,{month:"short",day:"numeric"});
+  const suggDateLabel = q.suggestedDate? new Date(q.suggestedDate).toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"}) : null;
+  const suggTimeLabel = (q.suggestedStart&&q.suggestedEnd)? (formatHHMMDisplay(q.suggestedStart)+" – "+formatHHMMDisplay(q.suggestedEnd)) : "";
+
+  const topRow = el("div","row"); topRow.style.cssText="margin-bottom:8px;align-items:flex-start;";
+  topRow.innerHTML = '<div><h3 style="margin:0 0 3px;font-size:14px;">'+escapeHtml(q.label)+'</h3>'
+    + '<div class="small muted">Missed · '+origDate+(q.originalTime?' · '+q.originalTime:'')+'</div></div>'
+    + (isHigh? '<span class="badge-priority">Priority</span>' : (q.status==="accepted"? '<span class="pill pill-green">Accepted</span>' : ''));
+  card.appendChild(topRow);
+
+  const suggDiv = el("div","small"); suggDiv.style.marginBottom="10px";
+  suggDiv.innerHTML = '<span class="muted">Suggested recovery: </span>'
+    + (suggDateLabel? '<b>'+suggDateLabel+', '+suggTimeLabel+'</b>' : '<span class="muted">No free slot found in the next 2 weeks — use Reschedule to pick one manually</span>');
+  card.appendChild(suggDiv);
+
+  if(q.status==="accepted"){
+    card.appendChild(buildCheckRow(!!q.completed, "Mark this recovery session as done", ()=>toggleRecoveryComplete(q.id)));
+  }
+
+  const btnRow = el("div","flex-gap"); btnRow.style.marginTop="10px";
+  if(q.status==="pending"){
+    const acceptBtn = el("button","btn btn-primary btn-sm","✅ Accept");
+    acceptBtn.onclick=()=>{ q.status="accepted"; saveState(); renderRecoveryQueue(); renderMissedBanner(); toast("Recovery session accepted"); };
+    btnRow.appendChild(acceptBtn);
+  }
+  const rescheduleBtn = el("button","btn btn-ghost btn-sm","✏ Reschedule");
+  rescheduleBtn.onclick=()=>openRescheduleModal(q.id);
+  btnRow.appendChild(rescheduleBtn);
+  const removeBtn = el("button","btn btn-danger btn-sm","❌ Remove");
+  removeBtn.onclick=()=>{ q.status="removed"; saveState(); renderRecoveryQueue(); renderMissedBanner(); toast("Removed from active queue"); };
+  btnRow.appendChild(removeBtn);
+  card.appendChild(btnRow);
+  return card;
+}
+function renderRecoveryQueue(){
+  const list = $("#recoveryList"); if(!list) return;
+  list.innerHTML="";
+  const items = state.recoveryQueue
+    .filter(q=>q.status!=="removed")
+    .sort((a,b)=> (a.suggestedDate||"9999-99-99").localeCompare(b.suggestedDate||"9999-99-99"));
+  if(!items.length){
+    list.innerHTML = '<div class="card empty-state"><div class="big-ic">✅</div>No missed sessions — you\'re all caught up!</div>';
+    return;
+  }
+  items.forEach(q=> list.appendChild(buildRecoveryCard(q)) );
+}
+function clearAllRecovery(){
+  state.recoveryQueue.forEach(q=>{
+    q.status = "removed";
+    const sess = getSession(q.date, q.sessionId);
+    sess.missed = false; // stop showing the red "Missed" pill for these in the Planner too
+  });
+  saveState();
+  renderRecoveryQueue();
+  renderMissedBanner();
+  refreshCurrentSection();
+  toast("Recovery queue cleared");
+}
+$("#clearRecoveryBtn").addEventListener("click", ()=>{
+  if(!state.recoveryQueue.some(q=>q.status!=="removed")){ toast("Queue is already empty"); return; }
+  openModal("Clear Recovery Queue",
+    '<p class="small">This clears every item currently in your active recovery queue (including ones already accepted) and won\'t bring any of them back later — use it to wipe out entries that shouldn\'t have been flagged as missed in the first place.</p>',
+    '<div class="flex-gap"><button class="btn btn-ghost" id="cancelClearRecoveryBtn">Cancel</button><button class="btn btn-danger" id="confirmClearRecoveryBtn">Clear Queue</button></div>'
+  );
+  $("#cancelClearRecoveryBtn").onclick = closeModal;
+  $("#confirmClearRecoveryBtn").onclick = ()=>{ clearAllRecovery(); closeModal(); };
+});
+
+/* ================================================================
+   4. NAVIGATION
+   ================================================================ */
+function go(sectionId){
+  $all(".section").forEach(s=>s.classList.remove("active"));
+  $("#sec-"+sectionId).classList.add("active");
+  $all(".navbtn").forEach(b=>b.classList.toggle("active", b.dataset.sec===sectionId));
+  window.scrollTo({top:0,behavior:"smooth"});
+  if(sectionId==="subjects") renderSubjects();
+  if(sectionId==="planner") renderPlanner();
+  if(sectionId==="recovery") renderRecoveryQueue();
+  if(sectionId==="tasks") renderTasks();
+  if(sectionId==="habits") renderHabits();
+  if(sectionId==="extras") renderExtras();
+  if(sectionId==="timer") renderTimer();
+  if(sectionId==="calendar") renderCalendar();
+  if(sectionId==="report") renderReport();
+  if(sectionId==="goals") renderGoals();
+  if(sectionId==="more") renderMore();
+}
+window.go = go;
+$all(".navbtn").forEach(b=> b.addEventListener("click", ()=>{
+  if(b.dataset.sec==="planner"){ plannerWeekOffset=0; plannerSelectedDayName=WEEKDAY_NAMES[new Date().getDay()]; }
+  go(b.dataset.sec);
+}) );
+
+/* ================================================================
+   5. XP / LEVEL / STREAK / BADGES
+   ================================================================ */
+function xpForLevel(l){ return 100 + (l-1)*60; }
+function addXP(amount, coinAmount){
+  state.xp += amount;
+  state.coins += (coinAmount!==undefined? coinAmount : Math.round(amount/4));
+  let leveledUp=false;
+  while(state.xp >= xpForLevel(state.level)){
+    state.xp -= xpForLevel(state.level);
+    state.level++;
+    leveledUp=true;
+  }
+  if(leveledUp){ toast("Level up! Now level "+state.level, "🎉"); confetti(); checkBadges(); }
+  saveState();
+}
+function unlockBadge(id){
+  if(!state.badges.includes(id)){
+    state.badges.push(id);
+    const b = BADGES.find(x=>x.id===id);
+    toast("Badge unlocked: "+(b?b.nm:id), "🏅");
+    confetti();
+  }
+}
+function checkBadges(){
+  if(state.level>=5) unlockBadge("level5");
+  if(state.level>=10) unlockBadge("level10");
+  let totalMcq=0, totalChaptersDone=0;
+  Object.values(state.subjects).forEach(s=>{
+    totalMcq += s.mcqCount||0;
+    s.chapters.forEach(c=>{ if(isChapterComplete(c)) totalChaptersDone++; });
+  });
+  if(totalChaptersDone>=1) unlockBadge("chapter1");
+  if(totalChaptersDone>=10) unlockBadge("chapter10");
+  if(totalMcq>=100) unlockBadge("mcq100");
+  if(totalMcq>=500) unlockBadge("mcq500");
+  const streak = computeStreaks();
+  if(streak.current>=3) unlockBadge("streak3");
+  if(streak.current>=7) unlockBadge("streak7");
+  if(streak.current>=30) unlockBadge("streak30");
+  saveState();
+}
+function isChapterComplete(c){ return c.read&&c.revision&&c.mcq&&c.cq&&c.memorized; }
+
+function allTaskDefsForDate(){
+  const defs = DEFAULT_TASKS.filter(t=> !state.removedDefaultTasks.includes(t.name));
+  return defs.concat(state.customTasks);
+}
+function allHabitDefsForDate(){
+  const defs = DEFAULT_HABITS.filter(h=> !state.removedDefaultHabits.includes(h));
+  return defs.concat(state.customHabits);
+}
+function computeDayCompletion(date){
+  const log = getLog(date);
+  const defs = allTaskDefsForDate();
+  const total = defs.length;
+  let done=0;
+  defs.forEach(t=>{ if(log.tasks[t.name]) done++; });
+  return {done, total, pct: total? Math.round(done/total*100):0};
+}
+function computeStreaks(){
+  // walk backward from today
+  let cur=0, longest=0, running=0, missed=0;
+  const dates = Object.keys(state.dailyLog).sort();
+  // compute longest by scanning all recorded days chronologically
+  let prevDate=null;
+  dates.forEach(d=>{
+    const score = computeDailyScore(d);
+    if(score>=60){
+      if(prevDate && daysBetween(prevDate,d)===1){ running++; } else { running=1; }
+      longest = Math.max(longest, running);
+    } else {
+      running=0;
+    }
+    prevDate = d;
+  });
+  // current streak: walk back from today
+  let d = new Date();
+  while(true){
+    const ds = todayStr(d);
+    if(state.dailyLog[ds] && computeDailyScore(ds)>=60){ cur++; d.setDate(d.getDate()-1); }
+    else break;
+  }
+  // missed days in last 30
+  for(let i=0;i<30;i++){
+    const dt = new Date(); dt.setDate(dt.getDate()-i);
+    const ds = todayStr(dt);
+    if(state.dailyLog[ds] && computeDailyScore(ds)<40) missed++;
+  }
+  return {current:cur, longest, weekly:Math.floor(cur/7), missed};
+}
+function daysBetween(a,b){
+  const da=new Date(a), db=new Date(b);
+  return Math.round((db-da)/86400000);
+}
+
+/* ================================================================
+   6. HOME RENDER
+   ================================================================ */
+function setRing(barEl, labelEl, pct, radius){
+  radius = radius||40;
+  const circumference = 2*Math.PI*radius;
+  barEl.style.strokeDasharray = circumference;
+  barEl.style.strokeDashoffset = circumference - (pct/100)*circumference;
+  if(labelEl) labelEl.textContent = pct+"%";
+}
+function updateExamCountdown(){
+  $("#examDateInput").value = state.examDate;
+  const today = new Date(); today.setHours(0,0,0,0);
+  const exam = new Date(state.examDate);
+  const diff = Math.ceil((exam-today)/86400000);
+  $("#examCountdown").textContent = diff>=0? diff : 0;
+}
+function renderQuote(){
+  const t = todayStr();
+  if(state.lastQuoteDate !== t){
+    state.quoteIndex = Math.floor(Math.random()*QUOTES.length);
+    state.lastQuoteDate = t;
+    saveState();
+  }
+  $("#motivationQuote").textContent = "\u201c"+QUOTES[state.quoteIndex]+"\u201d";
+}
+function computeDailyScore(date){
+  const c = computeDayCompletion(date);
+  const sc = computeSessionsForDate(date);
+  const log = getLog(date);
+  let habitScore=0;
+  const habitDefs = allHabitDefsForDate();
+  const totalHabits = habitDefs.length;
+  habitDefs.forEach(h=>{ if(log.habits[h]) habitScore++; });
+  const taskPart = c.pct*0.4;
+  const sessionPart = sc.pct*0.25;
+  const habitPart = (totalHabits? habitScore/totalHabits*100:0)*0.25;
+  const focusPart = Math.min(log.focusMinutes/180,1)*100*0.1;
+  return Math.round(taskPart+sessionPart+habitPart+focusPart);
+}
+function renderHome(){
+  $("#todayLabel").textContent = new Date().toLocaleDateString(undefined,{weekday:"long", month:"short", day:"numeric"});
+  updateExamCountdown();
+  renderQuote();
+  scanForMissedSessions();
+  renderMissedBanner();
+
+  const t = todayStr();
+  const comp = computeDayCompletion(t);
+  setRing($("#todayRingBar"), $("#todayRingLabel"), comp.pct, 40);
+  $("#todayProgressSub").textContent = comp.done+" of "+comp.total+" tasks done";
+  $("#statCompleted").textContent = comp.done;
+  $("#statRemaining").textContent = Math.max(comp.total-comp.done,0);
+  const log = getLog(t);
+  $("#statHours").textContent = Math.round((log.focusMinutes||0)/60*10)/10 + "h";
+  $("#statScore").textContent = computeDailyScore(t)+"/100";
+
+  // weekly progress: sum focus minutes over last 7 days vs a 14h/week goal
+  let weekMinutes=0, weekGoalMinutes=14*60;
+  const now = new Date();
+  const start = new Date(now); start.setDate(now.getDate()-6);
+  for(let i=0;i<7;i++){
+    const dt = new Date(start); dt.setDate(start.getDate()+i);
+    const ds = todayStr(dt);
+    weekMinutes += (state.dailyLog[ds]?state.dailyLog[ds].focusMinutes:0)||0;
+  }
+  const weekPct = Math.min(Math.round(weekMinutes/weekGoalMinutes*100),100);
+  $("#weekPbar").style.width = weekPct+"%";
+  $("#weekPctLabel").textContent = weekPct+"% of weekly goal";
+  $("#weekHoursLabel").textContent = Math.round(weekMinutes/60*10)/10+"h / "+Math.round(weekGoalMinutes/60)+"h";
+  $("#weekRange").textContent = start.toLocaleDateString(undefined,{month:"short",day:"numeric"})+" – "+now.toLocaleDateString(undefined,{month:"short",day:"numeric"});
+
+  const streaks = computeStreaks();
+  $("#streakCurrent").textContent = streaks.current+" 🔥";
+
+  $("#levelChip").textContent = state.level;
+  $("#coinsLabel").textContent = state.coins;
+  $("#xpBar").style.width = Math.min(Math.round(state.xp/xpForLevel(state.level)*100),100)+"%";
+
+  // tasks preview (first 4)
+  const defs = allTaskDefsForDate().slice(0,4);
+  const wrap = $("#homeTasksPreview"); wrap.innerHTML="";
+  if(!defs.length){ wrap.innerHTML = '<div class="empty-state small">No tasks yet</div>'; }
+  defs.forEach(td=>{
+    const done = !!log.tasks[td.name];
+    wrap.appendChild(buildCheckRow(done? true:false, td.name, ()=>toggleTask(td.name), td.hours? td.hours+"h":""));
+  });
+
+  const hwrap = $("#homeHabitsPreview"); hwrap.innerHTML="";
+  allHabitDefsForDate().slice(0,4).forEach(h=>{
+    const done = !!log.habits[h];
+    hwrap.appendChild(buildCheckRow(done, h, ()=>toggleHabit(h)));
+  });
+
+  renderHomeSchedule();
+  checkBadges();
+}
+function renderHomeSchedule(){
+  const t = todayStr();
+  const dayName = WEEKDAY_NAMES[new Date().getDay()];
+  $("#homeScheduleTitle").textContent = "Today's Schedule · "+dayName;
+  const defs = sessionsForWeekday(dayName);
+  const wrap = $("#homeSchedulePreview"); wrap.innerHTML="";
+  if(!defs.length){ wrap.innerHTML='<div class="empty-state small">No fixed schedule today</div>'; return; }
+  defs.forEach((def,idx)=>{
+    const sid = dayName+"-"+idx;
+    const sess = getSession(t, sid);
+    const doneCount = SESSION_CHECKS.filter(([k])=>sess.checks[k]).length;
+    const complete = isSessionComplete(sess);
+    const row = el("div","check-row");
+    row.style.cursor="pointer";
+    const chk = el("div","chk"+(complete?" on":""));
+    const lbl = el("div","rlabel"+(complete?" done":""), (def.time? def.time+" — ":"")+escapeHtml(def.label));
+    row.appendChild(chk); row.appendChild(lbl);
+    row.appendChild(el("div","rmeta", complete? "Completed" : doneCount+"/6"));
+    row.onclick = ()=>{ plannerWeekOffset=0; plannerSelectedDayName=dayName; go("planner"); };
+    wrap.appendChild(row);
+  });
+}
+function buildCheckRow(done, label, onClick, meta){
+  const row = el("div","check-row");
+  const chk = el("div","chk"+(done?" on":""));
+  chk.onclick = ()=>{ onClick(); };
+  const lbl = el("div","rlabel"+(done?" done":""), label);
+  row.appendChild(chk); row.appendChild(lbl);
+  if(meta) row.appendChild(el("div","rmeta",meta));
+  return row;
+}
+function toggleTask(name){
+  const log = getLog();
+  const wasDone = !!log.tasks[name];
+  log.tasks[name] = !wasDone;
+  if(!wasDone){ addXP(8,2); toast("Task completed","✅"); if(!state.badges.includes("first_task")) unlockBadge("first_task"); }
+  saveState();
+  refreshCurrentSection();
+}
+function toggleHabit(name){
+  const log = getLog();
+  const wasDone = !!log.habits[name];
+  log.habits[name] = !wasDone;
+  if(!wasDone){ addXP(5,1); }
+  const habitDefs = allHabitDefsForDate();
+  const allDone = habitDefs.length>0 && habitDefs.every(h=>log.habits[h]);
+  if(allDone) unlockBadge("habitperfect");
+  saveState();
+  refreshCurrentSection();
+}
+function refreshCurrentSection(){
+  const active = $all(".section.active")[0];
+  if(!active) return;
+  const id = active.id.replace("sec-","");
+  renderHome();
+  if(id==="subjects") renderSubjects();
+  if(id==="tasks") renderTasks();
+  if(id==="habits") renderHabits();
+  if(id==="extras") renderExtras();
+  if(id==="planner") renderPlanner();
+  if(id==="recovery") renderRecoveryQueue();
+  if(id==="report") renderReport();
+  if(id==="calendar") renderCalendar();
+}
+
+$("#examDateInput").addEventListener("change", e=>{ state.examDate=e.target.value; saveState(); renderHome(); });
+
+/* ================================================================
+   7. SUBJECTS & CHAPTERS
+   ================================================================ */
+let activeSubject = SUBJECT_NAMES[0];
+function subjectPct(name){
+  const s = state.subjects[name];
+  if(!s.chapters.length) return 0;
+  const done = s.chapters.filter(isChapterComplete).length;
+  return Math.round(done/s.chapters.length*100);
+}
+function renderSubjects(){
+  const tabs = $("#subjectTabs"); tabs.innerHTML="";
+  SUBJECT_NAMES.forEach(name=>{
+    const chip = el("div","subj-chip"+(name===activeSubject?" active":""));
+    const pct = subjectPct(name);
+    chip.innerHTML = '<span class="mini-ring" style="--pct:'+pct+'%"></span><span>'+name+'</span>';
+    chip.onclick = ()=>{ activeSubject=name; renderSubjects(); };
+    tabs.appendChild(chip);
+  });
+  const detail = $("#subjectDetail");
+  const s = state.subjects[activeSubject];
+  const pct = subjectPct(activeSubject);
+  const doneCh = s.chapters.filter(isChapterComplete).length;
+  detail.innerHTML="";
+
+  const overview = el("div","card");
+  overview.innerHTML = '<div class="row"><div>'
+    +'<h2 style="margin:0 0 4px;font-size:18px;">'+activeSubject+'</h2>'
+    +'<div class="small muted">'+doneCh+' / '+s.chapters.length+' chapters completed</div>'
+    +'</div>'
+    +'<div class="ring-wrap"><svg width="64" height="64" viewBox="0 0 64 64">'
+      +'<circle class="ring-track" cx="32" cy="32" r="27" stroke-width="7"></circle>'
+      +'<circle class="ring-bar" id="subjRingBar" cx="32" cy="32" r="27" stroke-width="7"></circle>'
+    +'</svg><div class="ring-label" id="subjRingLabel" style="font-size:14px;"></div></div>'
+    +'</div>'
+    +'<div class="grid grid-2" style="margin-top:14px;">'
+      +'<div class="stat-card"><div class="label">MCQ Solved</div><div class="value" id="mcqCountVal">'+s.mcqCount+'</div>'
+        +'<div class="flex-gap" style="margin-top:8px;"><button class="btn btn-sm btn-ghost" id="mcqMinusBtn">−</button><button class="btn btn-sm btn-ghost" id="mcqPlusBtn">+</button></div></div>'
+      +'<div class="stat-card"><div class="label">Written Practice</div><div class="value" id="writtenCountVal">'+s.writtenCount+'</div>'
+        +'<div class="flex-gap" style="margin-top:8px;"><button class="btn btn-sm btn-ghost" id="writtenMinusBtn">−</button><button class="btn btn-sm btn-ghost" id="writtenPlusBtn">+</button></div></div>'
+    +'</div>';
+  detail.appendChild(overview);
+  setRing(overview.querySelector("#subjRingBar"), overview.querySelector("#subjRingLabel"), pct, 27);
+  overview.querySelector("#mcqPlusBtn").onclick=()=>{ s.mcqCount++; addXP(1,0); saveState(); renderSubjects(); };
+  overview.querySelector("#mcqMinusBtn").onclick=()=>{ s.mcqCount=Math.max(0,s.mcqCount-1); saveState(); renderSubjects(); };
+  overview.querySelector("#writtenPlusBtn").onclick=()=>{ s.writtenCount++; addXP(3,1); saveState(); renderSubjects(); };
+  overview.querySelector("#writtenMinusBtn").onclick=()=>{ s.writtenCount=Math.max(0,s.writtenCount-1); saveState(); renderSubjects(); };
+
+  const chCard = el("div","card");
+  chCard.innerHTML = '<div class="card-title"><h3>Chapters</h3><button class="action" id="addChapterBtn">+ Add chapter</button></div>';
+  const chList = el("div");
+  s.chapters.forEach(ch=> chList.appendChild(buildChapterRow(ch, s)) );
+  if(!s.chapters.length) chList.innerHTML='<div class="empty-state"><div class="big-ic">📖</div>No chapters yet — add one</div>';
+  chCard.appendChild(chList);
+  detail.appendChild(chCard);
+  chCard.querySelector("#addChapterBtn").onclick=()=>{
+    openModal("Add Chapter",
+      '<div class="field"><label>Chapter name</label><input id="newChapterName" placeholder="e.g. Money and Banking"></div>',
+      '<button class="btn btn-primary btn-block" id="saveChapterBtn">Add Chapter</button>'
+    );
+    $("#saveChapterBtn").onclick = ()=>{
+      const name = $("#newChapterName").value.trim();
+      if(!name) return;
+      s.chapters.push({id:uid(), name, read:false,revision:false,mcq:false,cq:false,memorized:false});
+      saveState(); closeModal(); renderSubjects(); toast("Chapter added");
+    };
+  };
+
+  const notesCard = el("div","card");
+  notesCard.innerHTML='<div class="card-title"><h3>Notes</h3></div><div class="field"><textarea id="subjNotes" placeholder="Write quick notes for '+activeSubject+'...">'+ (s.notes||"") +'</textarea></div>';
+  detail.appendChild(notesCard);
+  notesCard.querySelector("#subjNotes").addEventListener("input", e=>{ s.notes=e.target.value; saveState(); });
+}
+function buildChapterRow(ch, subj){
+  const wrap = el("div","chapter");
+  const pctDone = [ch.read,ch.revision,ch.mcq,ch.cq,ch.memorized].filter(Boolean).length;
+  const pct = Math.round(pctDone/5*100);
+  const head = el("div","chapter-head");
+  head.innerHTML = '<div class="title"><input type="text" value="'+escapeHtml(ch.name)+'"></div>'
+    + '<div class="chapter-mini-bar"><div class="pbar"><div class="pbar-fill" style="width:'+pct+'%"></div></div></div>'
+    + (isChapterComplete(ch)? '<span class="pill pill-green">Done</span>' : '<span class="pill pill-yellow">'+pct+'%</span>')
+    + '<span class="caret">▾</span>';
+  head.querySelector("input").addEventListener("click", e=>e.stopPropagation());
+  head.querySelector("input").addEventListener("input", e=>{ ch.name=e.target.value; saveState(); });
+  head.addEventListener("click", (e)=>{ if(e.target.tagName==="INPUT") return; wrap.classList.toggle("open"); });
+
+  const body = el("div","chapter-body");
+  const items = [["read","Read"],["revision","Revision"],["mcq","MCQ"],["cq","CQ Written"],["memorized","Memorized"]];
+  const grid = el("div","subitem-grid");
+  items.forEach(([key,label])=>{
+    const item = el("div","subitem");
+    const chk = el("div","chk"+(ch[key]?" on":""));
+    chk.onclick = ()=>{
+      const wasComplete = isChapterComplete(ch);
+      ch[key]=!ch[key];
+      const nowComplete = isChapterComplete(ch);
+      if(!wasComplete && nowComplete){ addXP(20,5); toast(ch.name+" completed!","📘"); confetti(); checkBadges(); }
+      saveState(); renderSubjects();
+      // reopen this chapter after re-render
+      setTimeout(()=>{ const rows=$all(".chapter"); }, 0);
+    };
+    item.appendChild(chk);
+    item.appendChild(el("div","",label));
+    grid.appendChild(item);
+  });
+  body.appendChild(grid);
+  const delBtn = el("button","btn btn-danger btn-sm","🗑 Remove chapter");
+  delBtn.style.marginTop="10px";
+  delBtn.onclick = ()=>{ subj.chapters = subj.chapters.filter(c=>c.id!==ch.id); saveState(); renderSubjects(); };
+  body.appendChild(delBtn);
+
+  wrap.appendChild(head); wrap.appendChild(body);
+  return wrap;
+}
+function escapeHtml(s){ return (s||"").replace(/[&<>"']/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+
+/* ================================================================
+   7b. WEEKLY PLANNER + SESSION TIMER
+   ================================================================ */
+let plannerWeekOffset = 0;
+let plannerSelectedDayName = WEEKDAY_NAMES[new Date().getDay()];
+// session stopwatch: anchor-based so it stays accurate even if this browser
+// tab is backgrounded/throttled — elapsed time is always derived from real
+// timestamps (Date.now()), never from counting interval ticks.
+let sessTimer = { running:false, date:null, sessionId:null, anchorMs:0 };
+let sessTimerInterval = null;
+
+function formatMMSS(totalSeconds){
+  totalSeconds = Math.max(0, Math.round(totalSeconds));
+  const m = Math.floor(totalSeconds/60), s = totalSeconds%60;
+  return String(m).padStart(2,"0")+":"+String(s).padStart(2,"0");
+}
+function currentSessionLiveSeconds(){
+  if(!sessTimer.running) return 0;
+  return Math.floor((Date.now()-sessTimer.anchorMs)/1000);
+}
+function sessionTotalSeconds(date, sessionId){
+  const sess = getSession(date, sessionId);
+  let secs = sess.timerSeconds||0;
+  if(sessTimer.running && sessTimer.date===date && sessTimer.sessionId===sessionId) secs += currentSessionLiveSeconds();
+  return secs;
+}
+function startSessionTimer(date, sessionId){
+  pauseSessionTimer(); // only one session timer runs at a time
+  sessTimer = {running:true, date, sessionId, anchorMs:Date.now()};
+  const sess = getSession(date, sessionId);
+  if(!sess.checks.startedOnTime){ sess.checks.startedOnTime = true; saveState(); }
+  sessTimerInterval = setInterval(()=>{
+    const span = document.getElementById("sessTimerText-"+date+"-"+sessionId);
+    if(span) span.textContent = formatMMSS(sessionTotalSeconds(date,sessionId));
+  }, 1000);
+  renderPlanner();
+}
+function pauseSessionTimer(){
+  if(!sessTimer.running) return;
+  const elapsed = currentSessionLiveSeconds();
+  const sess = getSession(sessTimer.date, sessTimer.sessionId);
+  sess.timerSeconds = (sess.timerSeconds||0) + elapsed;
+  const log = getLog(sessTimer.date);
+  log.focusMinutes = (log.focusMinutes||0) + elapsed/60;
+  saveState();
+  if(sessTimerInterval){ clearInterval(sessTimerInterval); sessTimerInterval=null; }
+  sessTimer = {running:false, date:null, sessionId:null, anchorMs:0};
+  renderPlanner();
+  renderHome();
+}
+function toggleSessionCheck(date, sessionId, key, label){
+  const sess = getSession(date, sessionId);
+  const wasComplete = isSessionComplete(sess);
+  sess.checks[key] = !sess.checks[key];
+  const nowComplete = isSessionComplete(sess);
+  if(!wasComplete && nowComplete){
+    sess.completed = true;
+    addXP(15,4);
+    bumpSubjectProgressForLabel(label);
+    if(!document.hidden){ toast("Session completed!","📗"); confetti(); }
+    checkBadges();
+  } else if(wasComplete && !nowComplete){
+    sess.completed = false;
+  }
+  saveState();
+  renderPlanner();
+  renderHome();
+}
+function renderPlanner(){
+  const label = plannerWeekOffset===0? "This Week" : (plannerWeekOffset===1? "Next Week" : plannerWeekOffset===-1? "Last Week" : (plannerWeekOffset>0? plannerWeekOffset+" weeks ahead" : Math.abs(plannerWeekOffset)+" weeks ago"));
+  $("#plannerWeekLabel").textContent = label;
+
+  const orderedDays = ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"];
+  const chipWrap = $("#plannerDayChips"); chipWrap.innerHTML="";
+  orderedDays.forEach(dayName=>{
+    const dt = dateForWeekday(dayName, plannerWeekOffset);
+    const ds = todayStr(dt);
+    const sc = computeSessionsForDate(ds);
+    const isToday = ds===todayStr();
+    const chip = el("div","subj-chip"+(dayName===plannerSelectedDayName?" active":""));
+    chip.innerHTML = '<span class="mini-ring" style="--pct:'+sc.pct+'%"></span><span>'+dayName.slice(0,3)+' '+dt.getDate()+(isToday?' •':'')+'</span>';
+    chip.onclick = ()=>{ plannerSelectedDayName=dayName; renderPlanner(); };
+    chipWrap.appendChild(chip);
+  });
+
+  const selDate = dateForWeekday(plannerSelectedDayName, plannerWeekOffset);
+  const ds = todayStr(selDate);
+  const defs = sessionsForWeekday(plannerSelectedDayName);
+  const wrap = $("#plannerSessions"); wrap.innerHTML="";
+
+  const headCard = el("div","card");
+  const sc = computeSessionsForDate(ds);
+  headCard.innerHTML = '<div class="row"><h3 style="margin:0;font-size:15px;">'+plannerSelectedDayName+' · '+selDate.toLocaleDateString(undefined,{month:"short",day:"numeric"})+'</h3>'
+    + '<span class="pill '+(sc.pct>=70?"pill-green":sc.pct>=35?"pill-yellow":"pill-red")+'">'+sc.done+'/'+sc.total+' sessions</span></div>';
+  wrap.appendChild(headCard);
+
+  if(!defs.length){
+    const empty = el("div","card"); empty.innerHTML='<div class="empty-state"><div class="big-ic">📭</div>No fixed schedule for this day</div>';
+    wrap.appendChild(empty);
+    return;
+  }
+  if(plannerSelectedDayName==="Sunday"){
+    const note = el("div","card small muted"); note.style.textAlign="center";
+    note.textContent = "No fixed study schedule today — use it to reflect and reset for next week.";
+    wrap.appendChild(note);
+  }
+
+  defs.forEach((def,idx)=>{
+    const sid = plannerSelectedDayName+"-"+idx;
+    wrap.appendChild(buildSessionCard(ds, sid, def));
+  });
+}
+function buildSessionCard(date, sessionId, def){
+  const sess = getSession(date, sessionId);
+  const complete = isSessionComplete(sess);
+  const doneCount = SESSION_CHECKS.filter(([k])=>sess.checks[k]).length;
+  const isRunning = sessTimer.running && sessTimer.date===date && sessTimer.sessionId===sessionId;
+  const showMissed = sess.missed && !complete;
+
+  const wrap = el("div","chapter");
+  const head = el("div","chapter-head");
+  head.innerHTML = '<div class="title">'+(def.time? '<span class="session-time-label">'+def.time+'</span> ':'')+escapeHtml(def.label)+'</div>'
+    + '<div class="chapter-mini-bar"><div class="pbar"><div class="pbar-fill" style="width:'+Math.round(doneCount/6*100)+'%"></div></div></div>'
+    + (complete? '<span class="pill pill-green">Done</span>' : showMissed? '<span class="pill pill-red">Missed</span>' : '<span class="pill pill-yellow">'+doneCount+'/6</span>')
+    + '<span class="caret">▾</span>';
+  head.addEventListener("click", ()=> wrap.classList.toggle("open"));
+
+  const body = el("div","chapter-body");
+  if(showMissed){
+    const note = el("div","small","This session was missed and moved to the Recovery Queue — the checklist below still works if you catch up on it anyway.");
+    note.style.color="var(--danger)"; note.style.marginBottom="8px";
+    body.appendChild(note);
+  }
+  const grid = el("div","subitem-grid six");
+  SESSION_CHECKS.forEach(([key,lbl])=>{
+    const item = el("div","subitem");
+    const chk = el("div","chk"+(sess.checks[key]?" on":""));
+    chk.onclick = (e)=>{ e.stopPropagation(); toggleSessionCheck(date, sessionId, key, def.label); };
+    item.appendChild(chk);
+    item.appendChild(el("div","",lbl));
+    grid.appendChild(item);
+  });
+  body.appendChild(grid);
+
+  const timerRow = el("div","session-timer-row");
+  timerRow.innerHTML = '<span class="time-text" id="sessTimerText-'+date+'-'+sessionId+'">'+formatMMSS(sessionTotalSeconds(date,sessionId))+'</span>';
+  const timerBtn = el("button","btn "+(isRunning?"btn-danger":"btn-primary")+" btn-sm", isRunning? "⏸ Pause":"▶ Start Timer");
+  timerBtn.onclick = (e)=>{ e.stopPropagation(); if(isRunning) pauseSessionTimer(); else startSessionTimer(date, sessionId); };
+  timerRow.appendChild(timerBtn);
+  body.appendChild(timerRow);
+
+  const chapterField = el("div","field"); chapterField.style.marginTop="12px";
+  chapterField.innerHTML = '<label>Chapter</label>';
+  const chapterInput = el("input");
+  chapterInput.type="text";
+  chapterInput.value = sess.chapter||"";
+  chapterInput.placeholder = "Name the chapter you're covering...";
+  chapterInput.addEventListener("click", e=>e.stopPropagation());
+  chapterInput.addEventListener("input", e=>{ sess.chapter=e.target.value; saveState(); });
+  chapterField.appendChild(chapterInput);
+  body.appendChild(chapterField);
+
+  const notesField = el("div","field"); notesField.style.marginTop="12px";
+  notesField.innerHTML = '<label>Notes</label>';
+  const ta = el("textarea");
+  ta.value = sess.notes||"";
+  ta.placeholder = "Notes for this session...";
+  ta.addEventListener("click", e=>e.stopPropagation());
+  ta.addEventListener("input", e=>{ sess.notes=e.target.value; saveState(); });
+  notesField.appendChild(ta);
+  body.appendChild(notesField);
+
+  wrap.appendChild(head); wrap.appendChild(body);
+  return wrap;
+}
+$("#plannerPrevWeekBtn").addEventListener("click", ()=>{ plannerWeekOffset--; renderPlanner(); });
+$("#plannerNextWeekBtn").addEventListener("click", ()=>{ plannerWeekOffset++; renderPlanner(); });
+
+/* ================================================================
+   8. DAILY TASKS
+   ================================================================ */
+function renderTasks(){
+  $("#tasksDateLabel").textContent = new Date().toLocaleDateString(undefined,{month:"short",day:"numeric"});
+  const log = getLog();
+  const wrap = $("#taskListToday"); wrap.innerHTML="";
+  const defs = allTaskDefsForDate();
+  if(!defs.length){ wrap.innerHTML='<div class="empty-state">No tasks — add one above</div>'; }
+  defs.forEach(td=>{
+    const done = !!log.tasks[td.name];
+    const row = buildCheckRow(done, td.name, ()=>toggleTask(td.name), td.hours? td.hours+"h":"");
+    const delBtn = el("button","icon-btn","🗑");
+    delBtn.style.width="30px"; delBtn.style.height="30px"; delBtn.style.fontSize="13px";
+    delBtn.onclick = ()=>{
+      if(state.customTasks.find(t=>t.name===td.name)){
+        state.customTasks = state.customTasks.filter(t=>t.name!==td.name);
+      } else {
+        state.removedDefaultTasks.push(td.name);
+      }
+      saveState(); renderTasks();
+    };
+    row.appendChild(delBtn);
+    wrap.appendChild(row);
+  });
+}
+$("#addTaskBtn").addEventListener("click", ()=>{
+  openModal("Add Custom Task",
+    '<div class="field"><label>Task name</label><input id="newTaskName" placeholder="e.g. Read newspaper editorial"></div>'
+    +'<div class="field"><label>Estimated hours (optional)</label><input id="newTaskHours" type="number" step="0.5" min="0"></div>',
+    '<button class="btn btn-primary btn-block" id="saveTaskBtn">Add Task</button>'
+  );
+  $("#saveTaskBtn").onclick = ()=>{
+    const name = $("#newTaskName").value.trim();
+    if(!name) return;
+    const hours = parseFloat($("#newTaskHours").value)||0;
+    state.customTasks.push({name, hours});
+    saveState(); closeModal(); renderTasks(); toast("Task added");
+  };
+});
+$("#addHabitBtn").addEventListener("click", ()=>{
+  openModal("Add Custom Habit",
+    '<div class="field"><label>Habit name</label><input id="newHabitName" placeholder="e.g. No caffeine after 6 PM"></div>',
+    '<button class="btn btn-primary btn-block" id="saveHabitBtn">Add Habit</button>'
+  );
+  $("#saveHabitBtn").onclick = ()=>{
+    const name = $("#newHabitName").value.trim();
+    if(!name) return;
+    if(allHabitDefsForDate().includes(name)){ toast("That habit already exists"); return; }
+    state.customHabits.push(name);
+    saveState(); closeModal(); renderHabits(); toast("Habit added");
+  };
+});
+
+/* ================================================================
+   9. HABITS + PHONE TRACKER
+   ================================================================ */
+function renderHabits(){
+  const log = getLog();
+  const wrap = $("#habitListToday"); wrap.innerHTML="";
+  const habitDefs = allHabitDefsForDate();
+  if(!habitDefs.length){ wrap.innerHTML='<div class="empty-state small">No habits — add one above</div>'; }
+  habitDefs.forEach(h=>{
+    const done = !!log.habits[h];
+    const row = buildCheckRow(done,h,()=>toggleHabit(h));
+    const delBtn = el("button","icon-btn","🗑");
+    delBtn.style.width="30px"; delBtn.style.height="30px"; delBtn.style.fontSize="13px";
+    delBtn.onclick = ()=>{
+      if(state.customHabits.includes(h)){
+        state.customHabits = state.customHabits.filter(x=>x!==h);
+      } else {
+        state.removedDefaultHabits.push(h);
+      }
+      saveState(); renderHabits();
+    };
+    row.appendChild(delBtn);
+    wrap.appendChild(row);
+  });
+  const st = computeStreaks();
+  $("#streakDaily").textContent = st.current;
+  $("#streakWeekly").textContent = st.weekly;
+  $("#streakLongest").textContent = st.longest;
+  $("#missedDaysLabel").textContent = "Missed days (last 30): "+st.missed;
+
+  $("#phoneHoursInput").value = log.phoneHours!==null? log.phoneHours : "";
+  renderPhonePill(log.phoneHours);
+}
+function renderPhonePill(hours){
+  const box = $("#phoneStatusPill"); box.innerHTML="";
+  if(hours===null||hours===undefined||hours===""){ box.innerHTML='<span class="small muted">No entry yet today</span>'; return; }
+  let cls="pill-green", label="Great, under 2 hours";
+  if(hours>=2 && hours<3){ cls="pill-yellow"; label="Moderate, 2–3 hours"; }
+  if(hours>=3){ cls="pill-red"; label="High, 3+ hours"; }
+  box.innerHTML = '<span class="pill '+cls+'">'+hours+'h · '+label+'</span>';
+}
+$("#phoneHoursInput").addEventListener("input", e=>{
+  const v = e.target.value===""? null : parseFloat(e.target.value);
+  getLog().phoneHours = v;
+  saveState();
+  renderPhonePill(v);
+  if(v!==null && v<2) checkPhoneStreakBadge();
+});
+function checkPhoneStreakBadge(){
+  let count=0;
+  for(let i=0;i<7;i++){
+    const dt=new Date(); dt.setDate(dt.getDate()-i);
+    const ds=todayStr(dt);
+    const l=state.dailyLog[ds];
+    if(l && l.phoneHours!==null && l.phoneHours<2) count++; else break;
+  }
+  if(count>=7) unlockBadge("phonegreen7");
+}
+
+/* ================================================================
+   9b. CALORIE TRACKER + MONTHLY BUDGET
+   ================================================================ */
+function currentMonthKey(d){ d=d||new Date(); return d.toISOString().slice(0,7); }
+function renderExtras(){
+  // ---- Calorie tracker ----
+  const log = getLog();
+  $("#calorieTargetInput").value = state.calorieTarget || "";
+  $("#calorieConsumedInput").value = (log.caloriesConsumed!==null && log.caloriesConsumed!==undefined) ? log.caloriesConsumed : "";
+  const target = state.calorieTarget || 0;
+  const consumed = log.caloriesConsumed || 0;
+  const pct = target? Math.min(Math.round(consumed/target*100),150) : 0;
+  setRing($("#calorieRingBar"), null, Math.min(pct,100), 50);
+  $("#calorieRingLabel").innerHTML = consumed+"<br><span style='font-size:10px;color:var(--muted)'>of "+target+" kcal</span>";
+  const diff = target - consumed;
+  const pill = $("#calorieStatusPill");
+  if(!target){ pill.innerHTML='<span class="small muted">Set a daily target to see your balance</span>'; }
+  else if(log.caloriesConsumed===null || log.caloriesConsumed===undefined){ pill.innerHTML='<span class="small muted">No entry yet today</span>'; }
+  else if(diff>=0){ pill.innerHTML='<span class="pill pill-green">'+diff+' kcal remaining</span>'; }
+  else{ pill.innerHTML='<span class="pill pill-yellow">'+Math.abs(diff)+' kcal over target</span>'; }
+
+  // ---- Monthly budget ----
+  const mk = currentMonthKey();
+  $("#budgetMonthLabel").textContent = new Date().toLocaleDateString(undefined,{month:"long",year:"numeric"});
+  $("#monthlyBudgetInput").value = state.monthlyBudgets[mk] || "";
+  const monthExpenses = state.expenses.filter(e=> e.date.slice(0,7)===mk );
+  const spent = monthExpenses.reduce((a,e)=>a+e.amount,0);
+  const budget = state.monthlyBudgets[mk] || 0;
+  const bpct = budget? Math.min(Math.round(spent/budget*100),100) : 0;
+  $("#budgetPbar").style.width = bpct+"%";
+  $("#budgetPbar").style.background = spent>budget && budget? "var(--danger)" : "";
+  $("#budgetSpentLabel").textContent = "Spent "+spent;
+  $("#budgetRemainingLabel").textContent = budget? ("Remaining "+(budget-spent)) : "No budget set";
+
+  const list = $("#expenseList"); list.innerHTML="";
+  if(!monthExpenses.length){ list.innerHTML='<div class="empty-state small">No expenses logged this month</div>'; }
+  monthExpenses.slice().sort((a,b)=> b.date.localeCompare(a.date)).forEach(exp=>{
+    const row = el("div","check-row");
+    row.innerHTML = '<div class="rlabel">'+escapeHtml(exp.name)+'<div class="rmeta">'+escapeHtml(exp.category||"General")+' · '+exp.date+'</div></div>'
+      + '<div class="mono" style="margin-right:8px;">'+exp.amount+'</div>';
+    const delBtn = el("button","icon-btn","🗑");
+    delBtn.style.width="30px"; delBtn.style.height="30px"; delBtn.style.fontSize="13px";
+    delBtn.onclick = ()=>{ state.expenses = state.expenses.filter(e=>e.id!==exp.id); saveState(); renderExtras(); };
+    row.appendChild(delBtn);
+    list.appendChild(row);
+  });
+}
+$("#calorieTargetInput").addEventListener("input", e=>{
+  state.calorieTarget = e.target.value===""? 0 : parseInt(e.target.value);
+  saveState(); renderExtras();
+});
+$("#calorieConsumedInput").addEventListener("input", e=>{
+  getLog().caloriesConsumed = e.target.value===""? null : parseInt(e.target.value);
+  saveState(); renderExtras();
+});
+$("#monthlyBudgetInput").addEventListener("input", e=>{
+  const mk = currentMonthKey();
+  state.monthlyBudgets[mk] = e.target.value===""? 0 : parseFloat(e.target.value);
+  saveState(); renderExtras();
+});
+$("#addExpenseBtn").addEventListener("click", ()=>{
+  openModal("Add Expense",
+    '<div class="field"><label>Expense name</label><input id="newExpenseName" placeholder="e.g. Coaching fee"></div>'
+    +'<div class="field"><label>Amount</label><input id="newExpenseAmount" type="number" step="1" min="0"></div>'
+    +'<div class="field"><label>Category (optional)</label><input id="newExpenseCategory" placeholder="e.g. Books, Transport, Food"></div>'
+    +'<div class="field"><label>Date</label><input id="newExpenseDate" type="date" value="'+todayStr()+'"></div>',
+    '<button class="btn btn-primary btn-block" id="saveExpenseBtn">Add Expense</button>'
+  );
+  $("#saveExpenseBtn").onclick = ()=>{
+    const name = $("#newExpenseName").value.trim();
+    const amount = parseFloat($("#newExpenseAmount").value);
+    const date = $("#newExpenseDate").value || todayStr();
+    if(!name || isNaN(amount)) return;
+    state.expenses.push({id:uid(), name, amount, category:$("#newExpenseCategory").value.trim(), date});
+    saveState(); closeModal(); renderExtras(); toast("Expense added");
+  };
+});
+
+/* ================================================================
+   10. STUDY TIMER (Pomodoro)
+   ================================================================ */
+let timerInterval=null;
+let timerAnchorMs=null; // real timestamp (Date.now()) the countdown was last synced from
+let timerState = { mode:"25_5", phase:"focus", remaining:25*60, running:false };
+
+// The timer's live state above only exists in memory. On mobile especially,
+// switching away to another app can cause the browser to fully unload/kill
+// this page (not just background the tab), which wipes those variables.
+// To survive that, we mirror the running timer to localStorage on every
+// meaningful change, and restore + fast-forward it on load.
+const TIMER_STORE_KEY = "hsc_dashboard_timer_runtime";
+function saveTimerRuntime(){
+  try{
+    localStorage.setItem(TIMER_STORE_KEY, JSON.stringify({
+      mode: timerState.mode, phase: timerState.phase,
+      remaining: timerState.remaining, running: timerState.running,
+      anchorMs: timerAnchorMs
+    }));
+  }catch(e){}
+}
+function loadTimerRuntime(){
+  try{
+    const raw = localStorage.getItem(TIMER_STORE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  }catch(e){ return null; }
+}
+function renderTimer(){
+  const wrap = $("#timerModes"); wrap.innerHTML="";
+  POMODORO_MODES.forEach(m=>{
+    const chip = el("div","mode-chip"+(state.timerMode===m.id?" active":""), m.label);
+    chip.onclick=()=>{
+      pauseTimer();
+      state.timerMode=m.id; saveState();
+      const focus = m.id==="custom"? (state.customFocus||25) : m.focus;
+      timerState = {mode:m.id, phase:"focus", remaining:focus*60, running:false};
+      saveTimerRuntime();
+      renderTimer();
+    };
+    wrap.appendChild(chip);
+  });
+  $("#customTimerField").style.display = state.timerMode==="custom"? "block":"none";
+  $("#customFocusInput").value = state.customFocus;
+  $("#customBreakInput").value = state.customBreak;
+  updateTimerDisplay();
+  const log = getLog();
+  $("#focusToday").textContent = Math.round((log.focusMinutes||0))+"m";
+  let weekMin=0;
+  for(let i=0;i<7;i++){ const dt=new Date(); dt.setDate(dt.getDate()-i); const ds=todayStr(dt); weekMin += (state.dailyLog[ds]?state.dailyLog[ds].focusMinutes:0)||0; }
+  $("#focusWeek").textContent = Math.round(weekMin)+"m";
+}
+function currentModeMinutes(phase){
+  const m = POMODORO_MODES.find(x=>x.id===state.timerMode);
+  if(state.timerMode==="custom") return phase==="focus"? (state.customFocus||25) : (state.customBreak||5);
+  return phase==="focus"? m.focus : m.brk;
+}
+function updateTimerDisplay(){
+  const mins = Math.floor(timerState.remaining/60);
+  const secs = timerState.remaining%60;
+  $("#pomodoroTime").textContent = String(mins).padStart(2,"0")+":"+String(secs).padStart(2,"0");
+  $("#pomodoroPhaseLabel").textContent = timerState.phase==="focus"? "Focus session" : "Break time";
+  const totalSecs = currentModeMinutes(timerState.phase)*60;
+  const pct = totalSecs? Math.round((1-timerState.remaining/totalSecs)*100) : 0;
+  setRing($("#pomodoroRingBar"), null, pct, 96);
+  $("#timerStartBtn").textContent = timerState.running? "⏸ Pause" : "▶ Start";
+}
+// Advances timerState using the real elapsed time since the last sync
+// (timerAnchorMs), rather than assuming each interval tick equals exactly
+// one second. Browsers throttle/suspend setInterval in background or
+// inactive tabs, so counting ticks silently loses time; measuring against
+// Date.now() means the countdown is always correct once it resumes,
+// including firing any phase-completion (focus→break, break→focus) that
+// happened while the tab was hidden.
+function syncTimerElapsed(){
+  if(!timerAnchorMs) return;
+  const now = Date.now();
+  let elapsed = Math.floor((now-timerAnchorMs)/1000);
+  timerAnchorMs = now;
+  let guard=0;
+  while(elapsed>0 && guard<20){
+    guard++;
+    if(elapsed < timerState.remaining){
+      timerState.remaining -= elapsed;
+      elapsed = 0;
+    } else {
+      elapsed -= timerState.remaining;
+      completeCurrentTimerPhase();
+    }
+  }
+}
+function completeCurrentTimerPhase(){
+  if(timerState.phase==="focus"){
+    const mins = currentModeMinutes("focus");
+    getLog().focusMinutes = (getLog().focusMinutes||0) + mins;
+    addXP(Math.round(mins/2), Math.round(mins/10));
+    saveState();
+    if(!document.hidden){ toast("Focus session complete! +"+mins+"m logged","⏱️"); confetti(); }
+    timerState.phase="break"; timerState.remaining=currentModeMinutes("break")*60;
+  } else {
+    if(!document.hidden) toast("Break over — back to focus!","🔔");
+    timerState.phase="focus"; timerState.remaining=currentModeMinutes("focus")*60;
+  }
+  saveTimerRuntime();
+}
+function pauseTimer(){
+  if(timerState.running) syncTimerElapsed();
+  timerState.running=false;
+  if(timerInterval){ clearInterval(timerInterval); timerInterval=null; }
+  timerAnchorMs=null;
+  saveTimerRuntime();
+  updateTimerDisplay();
+}
+function timerTick(){
+  const phaseBefore = timerState.phase;
+  syncTimerElapsed();
+  updateTimerDisplay();
+  saveTimerRuntime();
+  if(timerState.phase!==phaseBefore) renderHome();
+}
+function startTimer(){
+  if(timerState.running) { pauseTimer(); return; }
+  timerState.running=true;
+  timerAnchorMs = Date.now();
+  saveTimerRuntime();
+  updateTimerDisplay();
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(timerTick,1000);
+}
+document.addEventListener("visibilitychange", ()=>{
+  if(!document.hidden && timerState.running){
+    timerTick();
+  } else if(document.hidden){
+    // Save immediately when the app is switched away from — "beforeunload"
+    // isn't reliable on mobile, but visibilitychange->hidden fires every time.
+    saveTimerRuntime();
+  }
+});
+window.addEventListener("pagehide", saveTimerRuntime);
+$("#timerStartBtn").addEventListener("click", startTimer);
+$("#timerResetBtn").addEventListener("click", ()=>{
+  pauseTimer();
+  timerState = {mode:state.timerMode, phase:"focus", remaining:currentModeMinutes("focus")*60, running:false};
+  saveTimerRuntime();
+  updateTimerDisplay();
+});
+$("#customFocusInput").addEventListener("input", e=>{ state.customFocus=parseInt(e.target.value)||25; saveState(); if(state.timerMode==="custom"&&!timerState.running){ timerState.remaining=state.customFocus*60; saveTimerRuntime(); updateTimerDisplay(); } });
+$("#customBreakInput").addEventListener("input", e=>{ state.customBreak=parseInt(e.target.value)||5; saveState(); });
+
+function isFullscreenActive(){
+  return !!(document.fullscreenElement || document.webkitFullscreenElement);
+}
+function updateFullscreenBtn(){
+  const on = document.body.classList.contains("timer-fullscreen");
+  $("#timerFullscreenBtn").textContent = on ? "⤢" : "⛶";
+  $("#timerFullscreenBtn").title = on ? "Exit fullscreen" : "Expand fullscreen";
+}
+function enterTimerFullscreen(){
+  document.body.classList.add("timer-fullscreen");
+  const req = document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen;
+  if(req){ req.call(document.documentElement).catch(()=>{ /* CSS-only expanded view still applies */ }); }
+  updateFullscreenBtn();
+}
+function exitTimerFullscreen(){
+  document.body.classList.remove("timer-fullscreen");
+  if(isFullscreenActive()){
+    const exit = document.exitFullscreen || document.webkitExitFullscreen;
+    if(exit) exit.call(document);
+  }
+  updateFullscreenBtn();
+}
+$("#timerFullscreenBtn").addEventListener("click", ()=>{
+  if(document.body.classList.contains("timer-fullscreen")) exitTimerFullscreen();
+  else enterTimerFullscreen();
+});
+document.addEventListener("fullscreenchange", ()=>{
+  if(!isFullscreenActive()) document.body.classList.remove("timer-fullscreen");
+  updateFullscreenBtn();
+});
+document.addEventListener("webkitfullscreenchange", ()=>{
+  if(!isFullscreenActive()) document.body.classList.remove("timer-fullscreen");
+  updateFullscreenBtn();
+});
+
+/* ================================================================
+   11. CALENDAR
+   ================================================================ */
+function renderCalendar(){
+  const now = new Date();
+  const view = new Date(now.getFullYear(), now.getMonth()+state.calMonthOffset, 1);
+  $("#calMonthLabel").textContent = view.toLocaleDateString(undefined,{month:"long",year:"numeric"});
+  const dow = $("#calDowRow"); dow.innerHTML="";
+  ["S","M","T","W","T","F","S"].forEach(d=> dow.appendChild(el("div","cal-dow",d)) );
+
+  const grid = $("#calGrid"); grid.innerHTML="";
+  const firstDay = new Date(view.getFullYear(), view.getMonth(), 1).getDay();
+  const daysInMonth = new Date(view.getFullYear(), view.getMonth()+1, 0).getDate();
+  for(let i=0;i<firstDay;i++) grid.appendChild(el("div","cal-day empty"));
+  for(let d=1; d<=daysInMonth; d++){
+    const dt = new Date(view.getFullYear(), view.getMonth(), d);
+    const ds = todayStr(dt);
+    const score = computeDailyScore(ds);
+    let cls="";
+    if(state.dailyLog[ds]){
+      if(score>=70) cls="green"; else if(score>=35) cls="yellow"; else cls="red";
+    }
+    const isToday = ds===todayStr();
+    const cell = el("div","cal-day"+(cls?" "+cls:"")+(isToday?" today":""));
+    cell.innerHTML = d + (state.dailyLog[ds]&&state.dailyLog[ds].note? '<span class="dot" style="background:var(--info)"></span>':"");
+    cell.onclick = ()=> openDayNoteModal(ds);
+    grid.appendChild(cell);
+  }
+}
+$("#calPrevBtn").addEventListener("click", ()=>{ state.calMonthOffset--; renderCalendar(); });
+$("#calNextBtn").addEventListener("click", ()=>{ state.calMonthOffset++; renderCalendar(); });
+function openDayNoteModal(ds){
+  const log = getLog(ds);
+  const comp = computeDayCompletion(ds);
+  const sc = computeSessionsForDate(ds);
+  openModal(new Date(ds).toLocaleDateString(undefined,{weekday:"long",month:"long",day:"numeric"}),
+    '<div class="small muted" style="margin-bottom:10px;">Tasks: '+comp.done+'/'+comp.total+' · Sessions: '+sc.done+'/'+sc.total+' · Score: '+computeDailyScore(ds)+'/100</div>'
+    +'<div class="field"><label>Note for this day</label><textarea id="dayNoteInput">'+escapeHtml(log.note||"")+'</textarea></div>',
+    '<button class="btn btn-primary btn-block" id="saveDayNoteBtn">Save Note</button>'
+  );
+  $("#saveDayNoteBtn").onclick = ()=>{
+    log.note = $("#dayNoteInput").value;
+    saveState(); closeModal(); renderCalendar(); toast("Note saved");
+  };
+}
+
+/* ================================================================
+   12. WEEKLY REPORT
+   ================================================================ */
+function renderReport(){
+  let studyMinutes=0, mcqSolved=0, cqSolved=0, phoneTotal=0, phoneDays=0, scoreSum=0, scoreDays=0;
+  const startMcq={}, endMcq={};
+  for(let i=0;i<7;i++){
+    const dt=new Date(); dt.setDate(dt.getDate()-i);
+    const ds=todayStr(dt);
+    const log = state.dailyLog[ds];
+    if(log){
+      studyMinutes += log.focusMinutes||0;
+      if(log.phoneHours!==null && log.phoneHours!==undefined){ phoneTotal+=log.phoneHours; phoneDays++; }
+      scoreSum += computeDailyScore(ds); scoreDays++;
+      Object.keys(log.tasks||{}).forEach(tn=>{
+        if(log.tasks[tn] && /mcq/i.test(tn)) mcqSolved++;
+        if(log.tasks[tn] && /(creative|cq|written)/i.test(tn)) cqSolved++;
+      });
+    }
+  }
+  const stats = [
+    ["Study Hours", Math.round(studyMinutes/60*10)/10+"h"],
+    ["Avg Daily Score", (scoreDays? Math.round(scoreSum/scoreDays):0)+"/100"],
+    ["MCQ Task Days", mcqSolved],
+    ["Creative Writing Days", cqSolved],
+    ["Avg Phone Usage", (phoneDays? Math.round(phoneTotal/phoneDays*10)/10:0)+"h"],
+    ["Chapters Completed", Object.values(state.subjects).reduce((a,s)=>a+s.chapters.filter(isChapterComplete).length,0)]
+  ];
+  const grid = $("#reportStats"); grid.innerHTML="";
+  stats.forEach(([l,v])=>{
+    const c = el("div","stat-card");
+    c.innerHTML = '<div class="label">'+l+'</div><div class="value">'+v+'</div>';
+    grid.appendChild(c);
+  });
+
+  const subjPcts = SUBJECT_NAMES.map(n=>({name:n, pct:subjectPct(n)}));
+  subjPcts.sort((a,b)=>b.pct-a.pct);
+  const strongest = subjPcts[0], weakest = subjPcts[subjPcts.length-1];
+  $("#reportSubjectSummary").innerHTML =
+    '<div class="row" style="margin-bottom:8px;"><span class="pill pill-green">Strongest</span><span>'+ (strongest? strongest.name+" ("+strongest.pct+"%)" : "—") +'</span></div>'
+    +'<div class="row"><span class="pill pill-red">Weakest</span><span>'+ (weakest? weakest.name+" ("+weakest.pct+"%)" : "—") +'</span></div>';
+
+  const chart = $("#reportChart"); chart.innerHTML="";
+  subjPcts.forEach(sp=>{
+    const row = el("div","",'');
+    row.style.marginBottom="10px";
+    row.innerHTML = '<div class="row small" style="margin-bottom:4px;"><span>'+sp.name+'</span><span class="muted">'+sp.pct+'%</span></div>'
+      +'<div class="pbar"><div class="pbar-fill" style="width:'+sp.pct+'%"></div></div>';
+    chart.appendChild(row);
+  });
+}
+
+/* ================================================================
+   13. GOALS
+   ================================================================ */
+function renderGoals(){
+  const wrap = $("#goalsList"); wrap.innerHTML="";
+  state.goals.forEach((g,idx)=>{
+    const card = el("div","card");
+    card.innerHTML = '<div class="row" style="margin-bottom:8px;"><h3 style="margin:0;font-size:14px;">'+escapeHtml(g.name)+'</h3><span class="mono small muted">'+g.progress+'%</span></div>'
+      + '<div class="pbar" style="margin-bottom:10px;"><div class="pbar-fill" style="width:'+g.progress+'%"></div></div>'
+      + '<input type="range" min="0" max="100" value="'+g.progress+'" style="width:100%;" data-idx="'+idx+'" class="goalSlider">';
+    wrap.appendChild(card);
+  });
+  const addCard = el("div","card");
+  addCard.innerHTML = '<button class="btn btn-ghost btn-block" id="addGoalBtn">+ Add Custom Goal</button>';
+  wrap.appendChild(addCard);
+  $all(".goalSlider").forEach(sl=>{
+    sl.addEventListener("input", e=>{
+      const idx = parseInt(e.target.dataset.idx);
+      state.goals[idx].progress = parseInt(e.target.value);
+      saveState();
+      const card = e.target.closest(".card");
+      card.querySelector(".pbar-fill").style.width = state.goals[idx].progress+"%";
+      card.querySelector(".mono").textContent = state.goals[idx].progress+"%";
+    });
+  });
+  $("#addGoalBtn").addEventListener("click", ()=>{
+    openModal("Add Goal", '<div class="field"><label>Goal name</label><input id="newGoalName" placeholder="e.g. Physics Retake"></div>',
+      '<button class="btn btn-primary btn-block" id="saveGoalBtn">Add Goal</button>');
+    $("#saveGoalBtn").onclick=()=>{
+      const name = $("#newGoalName").value.trim();
+      if(!name) return;
+      state.goals.push({name, progress:0});
+      saveState(); closeModal(); renderGoals();
+    };
+  });
+}
+
+/* ================================================================
+   14. MORE: CHALLENGES, BADGES, SETTINGS, BACKUP
+   ================================================================ */
+function renderMore(){
+  const dayOfYear = Math.floor((new Date()-new Date(new Date().getFullYear(),0,0))/86400000);
+  const dailyChallenges = [
+    "Solve 20 extra MCQs today", "Write 1 full CQ answer from memory", "Revise 2 old chapters",
+    "Teach a topic out loud to test recall", "Finish today's tasks before 9 PM"
+  ];
+  const weeklyChallenges = [
+    "Complete all chapters in your weakest subject's checklist by Sunday",
+    "Hit 14 hours of focused study this week",
+    "Keep phone usage under 2h for 5 days this week"
+  ];
+  $("#challengeBox").innerHTML =
+    '<div class="small muted" style="margin-bottom:4px;">Daily Challenge</div>'
+    +'<div class="pill pill-info" style="display:block;margin-bottom:12px;padding:10px 14px;">'+dailyChallenges[dayOfYear%dailyChallenges.length]+'</div>'
+    +'<div class="small muted" style="margin-bottom:4px;">Weekly Challenge</div>'
+    +'<div class="pill pill-info" style="display:block;padding:10px 14px;">'+weeklyChallenges[Math.floor(dayOfYear/7)%weeklyChallenges.length]+'</div>';
+
+  const grid = $("#badgeGrid"); grid.innerHTML="";
+  BADGES.forEach(b=>{
+    const unlocked = state.badges.includes(b.id);
+    const bd = el("div","badge"+(unlocked?"":" locked"));
+    bd.innerHTML = '<div class="ic">'+b.ic+'</div><div class="nm">'+b.nm+'</div>';
+    grid.appendChild(bd);
+  });
+
+  $("#darkSwitch").classList.toggle("on", state.theme==="dark");
+  $("#soundSwitch").classList.toggle("on", state.sound);
+}
+$("#darkSwitch").addEventListener("click", ()=>{
+  state.theme = state.theme==="dark"?"light":"dark";
+  applyTheme(); saveState(); renderMore();
+});
+$("#soundSwitch").addEventListener("click", ()=>{
+  state.sound = !state.sound; saveState(); renderMore();
+});
+$("#themeToggleBtn").addEventListener("click", ()=>{
+  state.theme = state.theme==="dark"?"light":"dark";
+  applyTheme(); saveState();
+});
+$("#soundToggleBtn").addEventListener("click", ()=>{
+  state.sound = !state.sound; saveState();
+  toast(state.sound? "Sound on":"Sound off");
+});
+function applyTheme(){
+  document.documentElement.classList.toggle("light", state.theme==="light");
+  $("#themeToggleBtn").textContent = state.theme==="dark"? "🌙":"☀️";
+}
+
+/* ---------- Cloud Sync UI ---------- */
+updateSyncFieldFromStorage();
+if(getSyncCode()) setSyncStatus("offline");
+$("#syncGenBtn").addEventListener("click", async ()=>{
+  const code = genSyncCode();
+  $("#syncCodeInput").value = code;
+  setSyncCodeLocal(code);
+  toast("New sync code created: "+code);
+  await pushStateToCloud();
+});
+$("#syncLinkBtn").addEventListener("click", async ()=>{
+  const code = $("#syncCodeInput").value.trim().toUpperCase();
+  if(!code){ toast("Enter a sync code first","⚠️"); return; }
+  setSyncCodeLocal(code);
+  const remote = await pullStateFromCloud(code);
+  if(remote && remote.data){
+    openModal("Cloud data found",
+      '<p class="small">This code already has data saved in the cloud. Do you want to load it (replacing what\'s on this device), or keep this device\'s data and overwrite the cloud copy?</p>',
+      '<div class="flex-gap"><button class="btn btn-ghost" id="syncKeepLocalBtn">Keep this device\'s data</button><button class="btn btn-primary" id="syncUseCloudBtn">Load cloud data</button></div>'
+    );
+    $("#syncKeepLocalBtn").onclick = async ()=>{ closeModal(); await pushStateToCloud(); toast("Linked — cloud updated with this device's data"); };
+    $("#syncUseCloudBtn").onclick = ()=>{
+      adoptRemoteState(remote.data);
+      applyTheme(); closeModal(); renderAll();
+      toast("Linked — cloud data loaded");
+    };
+  }else{
+    toast("Linked — no cloud data yet, pushing this device's data");
+    await pushStateToCloud();
+  }
+});
+$("#syncPushBtn").addEventListener("click", async ()=>{
+  const result = await pushStateToCloud();
+  if(result.ok) toast("Pushed to cloud");
+  else toast("Push failed: "+result.error, "⚠️");
+});
+$("#syncPullBtn").addEventListener("click", async ()=>{
+  const code = getSyncCode();
+  if(!code){ toast("Link a sync code first","⚠️"); return; }
+  const remote = await pullStateFromCloud(code);
+  if(!remote || !remote.data){ toast("No cloud data found for this code","⚠️"); return; }
+  openModal("Pull from cloud",
+    '<p class="small">This will replace all data on this device with the cloud copy. This cannot be undone.</p>',
+    '<div class="flex-gap"><button class="btn btn-ghost" id="cancelPullBtn">Cancel</button><button class="btn btn-primary" id="confirmPullBtn">Yes, load cloud data</button></div>'
+  );
+  $("#cancelPullBtn").onclick = closeModal;
+  $("#confirmPullBtn").onclick = ()=>{
+    adoptRemoteState(remote.data);
+    applyTheme(); closeModal(); renderAll();
+    toast("Cloud data loaded");
+  };
+});
+$("#syncUnlinkBtn").addEventListener("click", ()=>{
+  clearSyncCodeLocal();
+  updateSyncFieldFromStorage();
+  setSyncStatus("offline", "Reset — this device is back on the default shared sync.");
+  toast("Reset to default sync");
+});
+
+$("#exportBtn").addEventListener("click", ()=>{
+  const blob = new Blob([JSON.stringify(state,null,2)], {type:"application/json"});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href=url; a.download="hsc-dashboard-backup-"+todayStr()+".json";
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  toast("Backup exported");
+});
+$("#importBtn").addEventListener("click", ()=> $("#importFile").click());
+$("#importFile").addEventListener("change", e=>{
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const parsed = JSON.parse(reader.result);
+      state = Object.assign(defaultState(), parsed);
+      saveState(); applyTheme(); renderAll();
+      toast("Data imported");
+    }catch(err){ toast("Invalid file","⚠️"); }
+  };
+  reader.readAsText(file);
+});
+$("#resetBtn").addEventListener("click", ()=>{
+  openModal("Reset All Data",
+    '<p class="small">This will permanently erase all progress, tasks, chapters, and stats stored on this device. This cannot be undone.</p>',
+    '<div class="flex-gap"><button class="btn btn-ghost" id="cancelResetBtn">Cancel</button><button class="btn btn-danger" id="confirmResetBtn">Yes, Reset Everything</button></div>'
+  );
+  $("#cancelResetBtn").onclick = closeModal;
+  $("#confirmResetBtn").onclick = ()=>{
+    state = defaultState(); saveState(); applyTheme(); closeModal(); renderAll();
+    toast("All data has been reset");
+  };
+});
+
+/* ================================================================
+   15. SEARCH
+   ================================================================ */
+$("#searchToggleBtn").addEventListener("click", ()=>{
+  const box = $("#searchBox");
+  box.style.display = box.style.display==="none"? "flex":"none";
+  if(box.style.display==="flex") $("#searchInput").focus();
+});
+$("#searchInput").addEventListener("input", e=>{
+  const q = e.target.value.trim().toLowerCase();
+  const results = $("#searchResults");
+  if(!q){ results.innerHTML=""; return; }
+  const hits = [];
+  SUBJECT_NAMES.forEach(n=>{
+    if(n.toLowerCase().includes(q)) hits.push({label:n+" (subject)", go:"subjects", set:()=>{activeSubject=n;}});
+    state.subjects[n].chapters.forEach(c=>{
+      if(c.name.toLowerCase().includes(q)) hits.push({label:c.name+" — "+n, go:"subjects", set:()=>{activeSubject=n;}});
+    });
+  });
+  allTaskDefsForDate().forEach(t=>{ if(t.name.toLowerCase().includes(q)) hits.push({label:t.name+" (task)", go:"tasks"}); });
+  allHabitDefsForDate().forEach(h=>{ if(h.toLowerCase().includes(q)) hits.push({label:h+" (habit)", go:"habits"}); });
+  const card = el("div","card");
+  if(!hits.length){ card.innerHTML='<div class="small muted">No matches</div>'; }
+  else{
+    hits.slice(0,8).forEach(h=>{
+      const row = el("div","check-row",'<div class="rlabel">'+escapeHtml(h.label)+'</div>');
+      row.style.cursor="pointer";
+      row.onclick = ()=>{ if(h.set) h.set(); go(h.go); };
+      card.appendChild(row);
+    });
+  }
+  results.innerHTML=""; results.appendChild(card);
+});
+
+/* ================================================================
+   16. INIT
+   ================================================================ */
+function renderAll(){
+  renderHome(); renderSubjects(); renderPlanner(); renderRecoveryQueue(); renderTasks(); renderHabits(); renderExtras(); renderTimer();
+  renderCalendar(); renderReport(); renderGoals(); renderMore();
+}
+function tick(){
+  renderHome();
+}
+applyTheme();
+(function restoreTimerRuntime(){
+  const rt = loadTimerRuntime();
+  if(rt && typeof rt.remaining==="number"){
+    timerState = {mode:rt.mode||state.timerMode, phase:rt.phase||"focus", remaining:rt.remaining, running:!!rt.running};
+    timerAnchorMs = rt.anchorMs||null;
+    if(timerState.running && timerAnchorMs){
+      syncTimerElapsed(); // fast-forward through whatever time passed while the page was closed/hidden
+      timerAnchorMs = Date.now();
+      saveTimerRuntime();
+      if(timerInterval) clearInterval(timerInterval);
+      timerInterval = setInterval(timerTick,1000);
+    }
+  } else {
+    timerState.remaining = currentModeMinutes("focus")*60;
+  }
+})();
+renderAll();
+setInterval(()=>{ renderHome(); }, 60000);
+window.addEventListener("beforeunload", saveState);
+
+/* Automatic cloud sync: every device that opens this file resolves to the
+   same built-in sync code (unless someone deliberately switched to a custom
+   one in Advanced), so syncing needs zero setup. On load, and then every
+   ~15s while the app stays open, silently check the cloud for a newer copy
+   saved from another device and adopt it if found. */
+(async function autoSyncInit(){
+  if(!sb) return;
+  const code = getSyncCode();
+  const remote = await pullStateFromCloud(code, {silent:true});
+  if(remote && remote.data){
+    const remoteTime = new Date(remote.updated_at).getTime();
+    const localTime = parseInt(localStorage.getItem("hsc_dashboard_last_local_save")||"0", 10);
+    if(remoteTime > localTime){
+      adoptRemoteState(remote.data);
+      applyTheme(); renderAll();
+      setSyncStatus("synced");
+      toast("Loaded newer data from your other device");
+    }else{
+      setSyncStatus("synced");
+    }
+  } else {
+    // Nothing in the cloud yet for this code — push this device's data as the seed copy.
+    await pushStateToCloud();
+  }
+})();
+
+setInterval(async ()=>{
+  if(syncing) return;
+  const code = getSyncCode();
+  const remote = await pullStateFromCloud(code, {silent:true});
+  if(remote && remote.data){
+    const remoteTime = new Date(remote.updated_at).getTime();
+    const localTime = parseInt(localStorage.getItem("hsc_dashboard_last_local_save")||"0", 10);
+    if(remoteTime > localTime){
+      adoptRemoteState(remote.data);
+      applyTheme(); renderAll();
+      setSyncStatus("synced");
+      toast("Loaded newer data from your other device");
+    }
+  }
+}, 15000);
+
+})();
+</script>
+</body>
+</html>
